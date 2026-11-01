@@ -108,7 +108,7 @@ td.src { color: var(--muted); font-size: 0.8rem; }
 
 .checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 0.9rem; }
 .checks li { display: flex; gap: 10px; align-items: baseline; }
-.dot { flex: none; width: 10px; height: 10px; border-radius: 50%; transform: translateY(1px); }
+.dot { display: inline-block; flex: none; width: 10px; height: 10px; border-radius: 50%; transform: translateY(1px); }
 .dot-gruen { background: var(--ok); }
 .dot-gelb { background: var(--warn); }
 .dot-rot { background: var(--bad); }
@@ -146,3 +146,47 @@ td.src { color: var(--muted); font-size: 0.8rem; }
 input[type="number"], input[type="text"] { font: 15px var(--font-mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 7px 9px; }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+/* Räder & Messwerte */
+fieldset.wheel { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px 12px; margin: 0; display: grid; gap: 8px; }
+fieldset.wheel legend { padding: 0 4px; font-weight: 600; font-size: 0.9rem; }
+.grid4 { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.grid4 label, .tire-field { display: grid; gap: 3px; font-size: 0.8rem; color: var(--muted); }
+.grid4 input, .tire-field input { width: 100%; }
+.measures { display: grid; gap: 10px; }
+.measure { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px 10px; align-items: center; }
+.measure label { font-size: 0.88rem; font-weight: 500; }
+.measure .hint { grid-column: 1 / -1; }
+.measure .inline input.short { flex: 0 0 80px; width: 80px; }
+
+/* Radhaus */
+.fit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .fit-grid { grid-template-columns: minmax(0, 1fr); } }
+.fit-card { border: 1px solid var(--line); border-radius: 6px; border-top-width: 4px; padding: 12px; display: grid; gap: 10px; align-content: start; min-width: 0; }
+.fit-gruen { border-top-color: var(--ok); }
+.fit-gelb { border-top-color: var(--warn); }
+.fit-rot { border-top-color: var(--bad); }
+.fit-unbekannt { border-top-color: var(--ghost); }
+.fit-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.fit-spec { font-size: 0.82rem; color: var(--muted); }
+.pill { margin-left: auto; font-size: 0.75rem; padding: 2px 8px; border-radius: 10px; color: var(--surface); background: var(--ghost); }
+.pill-gruen { background: var(--ok); }
+.pill-gelb { background: var(--warn); }
+.pill-rot { background: var(--bad); }
+.section { width: 100%; height: auto; background: var(--bg); border-radius: 4px; }
+.section .ref { stroke: var(--muted); stroke-width: 1.5; stroke-dasharray: 8 6; }
+.tire-sec { fill: color-mix(in srgb, var(--ink) 80%, transparent); }
+.rim-sec { stroke: var(--accent); stroke-width: 7; stroke-linecap: round; }
+.rim-sec.thin { stroke-width: 4; }
+.body-part { fill: color-mix(in srgb, var(--accent) 35%, var(--surface)); stroke: var(--accent); stroke-width: 2; }
+.fender-sec { fill: none; stroke: var(--ink); stroke-width: 7; stroke-linecap: round; }
+.fender-unknown { stroke: var(--ink); stroke-width: 3; stroke-dasharray: 10 8; }
+.gap line { stroke-width: 4; }
+.gap text { font-weight: 600; }
+.gap-gruen line { stroke: var(--ok); } .gap-gruen text { fill: var(--ok); }
+.gap-gelb line { stroke: var(--warn); } .gap-gelb text { fill: var(--warn); }
+.gap-rot line { stroke: var(--bad); } .gap-rot text { fill: var(--bad); }
+.section .label { font-size: 22px; }
+.section .label.small { font-size: 16px; }
+.notes { margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--muted); display: grid; gap: 3px; }
+.notes strong { color: var(--ink); font-weight: 500; }

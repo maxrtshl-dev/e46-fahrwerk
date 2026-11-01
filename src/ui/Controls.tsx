@@ -1,6 +1,4 @@
 import { req } from "../core/data";
-import { defaultStaticRadius, parseTireSize } from "../core/tire";
-import { TIRE_DEFLECTION_DEFAULT } from "../core/thresholds";
 import { formatDegMin } from "../core/units";
 import { data, useSetup } from "../app/store";
 
@@ -95,7 +93,7 @@ export function Controls() {
       <div className="field">
         <div className="field-head">
           <label htmlFor="hHA">Höhe HA</label>
-          <span className="hint-inline">nur Grenzprüfung, Kinematik HA folgt in M5</span>
+          <span className="hint-inline">HA-Kinematik als Band aus Annahmen</span>
         </div>
         <div className="inline">
           <input
@@ -123,7 +121,7 @@ export function Controls() {
         display={`${s.bump > 0 ? "+" : ""}${s.bump} mm`}
         stock={0}
         onChange={(v) => set({ bump: v })}
-        hint="+ = Rad wandert zur Karosserie (einfedern)"
+        hint="beide Achsen · + = Rad wandert zur Karosserie (einfedern)"
       />
 
       <Slider
@@ -153,39 +151,6 @@ export function Controls() {
         hint={`Domlager nach innen gedrückt, max. ≈ ${String(maxCorr).replace(".", ",")}° über die Langlöcher`}
       />
 
-      <div className="field">
-        <div className="field-head">
-          <label htmlFor="tire">Reifen VA</label>
-        </div>
-        <div className="inline">
-          <input
-            id="tire"
-            type="text"
-            value={s.tire}
-            onChange={(e) => {
-              const t = e.target.value;
-              try {
-                const r = defaultStaticRadius(parseTireSize(t), TIRE_DEFLECTION_DEFAULT);
-                set({ tire: t, staticRadius: Math.round(r) });
-              } catch {
-                set({ tire: t });
-              }
-            }}
-          />
-          <label htmlFor="rstat" className="sub">
-            r stat.
-          </label>
-          <input
-            id="rstat"
-            type="number"
-            inputMode="numeric"
-            className="short"
-            value={s.staticRadius}
-            onChange={(e) => set({ staticRadius: Number(e.target.value) || s.staticRadius })}
-          />
-          <span className="unit">mm</span>
-        </div>
-      </div>
     </section>
   );
 }

@@ -19,6 +19,13 @@ function Conf({ c }: { c: Confidence }) {
   return <span className={`conf conf-${c === "geschätzt" ? "geschaetzt" : c}`}>{c}</span>;
 }
 
+/** Band „a … b“; gleiche Enden werden zu einem Wert. */
+function band(b: { min: number; max: number }, f: (v: number) => string): string {
+  const a = f(b.min);
+  const z = f(b.max);
+  return a === z ? a : `${a} … ${z.replace("≈ ", "")}`;
+}
+
 const heightConf = data.vehicle.stockHeightFront.confidence;
 const factory = data.factoryAlignment.front;
 
@@ -107,6 +114,38 @@ export function ResultsPanel({ c, roll }: { c: Computed; roll: number }) {
             </tbody>
           </table>
         </div>
+      )}
+
+      {c.rear ? (
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th scope="col">Hinterachse · Band aus Annahmen</th>
+                <th scope="col" className="num">statisch</th>
+                <th scope="col" className="num">Lastfall außen</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Tieferlegung</th>
+                <td className="num" colSpan={2}>{fmtMm(c.rear.lowering, heightConf)}</td>
+              </tr>
+              <tr>
+                <th scope="row">Sturz zur Karosserie</th>
+                <td className="num">{band(c.rear.static.camberDeg, (v) => fmtDeg(v, "geschätzt"))}</td>
+                <td className="num">{band(c.rear.load.camberDeg, (v) => fmtDeg(v, "geschätzt"))}</td>
+              </tr>
+              <tr>
+                <th scope="row">Rollzentrum Höhe</th>
+                <td className="num">{band(c.rear.static.rollCenterHeight, (v) => fmtMm(v, "geschätzt", true))}</td>
+                <td className="num">{band(c.rear.load.rollCenterHeight, (v) => fmtMm(v, "geschätzt", true))}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        <p className="hint">Hinterachse: Höhe HA eintragen, dann erscheinen Sturz- und Rollzentrum-Band.</p>
       )}
 
       <h3>Gutachten DTS</h3>

@@ -143,7 +143,7 @@ Die vollständigen Werte stehen in `e46_data.json`. Zusammenfassung:
 - Sturz VA Ziel ≈ −1,5° bis −1°50′ (Dom nach innen gedrückt, max. ≈ 0,5° Versatz).
 - Sturz HA kommt nach Tieferlegung kaum unter ≈ −2°.
 - Fahrverhalten: neutral mit Hang zum Übersteuern. Negativ-Referenz: früherer E90 (zu untersteuernd).
-- Reifen aktuell: **225/40 R18** (r unbelastet 318,6 mm, statisch ≈ 305 mm).
+- Reifen aktuell: ~~225/40 R18~~ → seit 2026-11-01 **BMW Styling 68**: VA 7,5J×17 ET41 mit 225/45 R17, HA 8,5J×17 ET50 mit 245/40 R17 (maßgeblich ist `e46_data.json`).
 
 ---
 

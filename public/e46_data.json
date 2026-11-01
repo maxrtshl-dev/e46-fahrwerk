@@ -4,64 +4,287 @@
     "type": "346C",
     "engine": "M52TU B28",
     "coilover": "DTSline (Teilegutachten 14-TAAS-0183/1K)",
-    "version": "2026-11-01",
+    "version": "2026-11-01b",
     "conventions": "ISO 8855 (x vorn, y links, z oben), mm, Grad dezimal; Sturz negativ = oben innen; Spur positiv = Vorspur; Höhe = Radmitte bis Radlaufkante"
   },
   "limits": {
-    "minHeightFront": { "value": 320, "unit": "mm", "source": "Teilegutachten DTS, Pkt. I", "confidence": "belegt" },
-    "minHeightRear": { "value": 310, "unit": "mm", "source": "Teilegutachten DTS, Pkt. I", "confidence": "belegt" },
-    "perchRangeFrontMin": { "value": 195, "unit": "mm", "source": "Teilegutachten DTS", "confidence": "belegt", "note": "Federauflage bis Befestigungsschraube Federbein" },
-    "perchRangeFrontMax": { "value": 230, "unit": "mm", "source": "Teilegutachten DTS", "confidence": "belegt" },
-    "perchRangeRearMin": { "value": 20, "unit": "mm", "source": "Teilegutachten DTS", "confidence": "belegt", "note": "Federauflage bis Anlagefläche Gewindehülse" },
-    "perchRangeRearMax": { "value": 45, "unit": "mm", "source": "Teilegutachten DTS", "confidence": "belegt" },
-    "minGroundClearance": { "value": 80, "unit": "mm", "source": "Teilegutachten DTS, Pkt. III.2 (beladen)", "confidence": "belegt" },
-    "bumpStopHeightFront": { "value": 50.2, "unit": "mm", "source": "Teilegutachten DTS", "confidence": "belegt", "note": "Einfederweg +40 mm ggü. Serie; absoluter Restweg nicht angegeben" }
+    "minHeightFront": {
+      "value": 320,
+      "unit": "mm",
+      "source": "Teilegutachten DTS, Pkt. I",
+      "confidence": "belegt"
+    },
+    "minHeightRear": {
+      "value": 310,
+      "unit": "mm",
+      "source": "Teilegutachten DTS, Pkt. I",
+      "confidence": "belegt"
+    },
+    "perchRangeFrontMin": {
+      "value": 195,
+      "unit": "mm",
+      "source": "Teilegutachten DTS",
+      "confidence": "belegt",
+      "note": "Federauflage bis Befestigungsschraube Federbein"
+    },
+    "perchRangeFrontMax": {
+      "value": 230,
+      "unit": "mm",
+      "source": "Teilegutachten DTS",
+      "confidence": "belegt"
+    },
+    "perchRangeRearMin": {
+      "value": 20,
+      "unit": "mm",
+      "source": "Teilegutachten DTS",
+      "confidence": "belegt",
+      "note": "Federauflage bis Anlagefläche Gewindehülse"
+    },
+    "perchRangeRearMax": {
+      "value": 45,
+      "unit": "mm",
+      "source": "Teilegutachten DTS",
+      "confidence": "belegt"
+    },
+    "minGroundClearance": {
+      "value": 80,
+      "unit": "mm",
+      "source": "Teilegutachten DTS, Pkt. III.2 (beladen)",
+      "confidence": "belegt"
+    },
+    "bumpStopHeightFront": {
+      "value": 50.2,
+      "unit": "mm",
+      "source": "Teilegutachten DTS",
+      "confidence": "belegt",
+      "note": "Einfederweg +40 mm ggü. Serie; absoluter Restweg nicht angegeben"
+    }
   },
   "vehicle": {
-    "trackFront": { "value": 1480, "unit": "mm", "source": "E46 Coupé, gerundet", "confidence": "geschätzt" },
-    "trackRear": { "value": 1490, "unit": "mm", "source": "E46 Coupé, gerundet", "confidence": "geschätzt" },
-    "stockHeightFront": { "value": 385, "unit": "mm", "source": "e46-forum.de", "confidence": "geschätzt", "note": "unbestätigt" },
-    "stockHeightRear": { "value": 365, "unit": "mm", "source": "e46-forum.de", "confidence": "geschätzt", "note": "unbestätigt" },
-    "currentHeightFront": { "value": 365, "unit": "mm", "source": "Fotoschätzung", "confidence": "geschätzt", "note": "360–370 mm, ±10" },
-    "currentHeightRear": { "value": null, "unit": "mm", "source": "", "confidence": "Annahme", "note": "unbekannt – messen" },
-    "springRateFront": { "value": 48, "unit": "N/mm", "source": "gerechnet aus Drahtdaten Gutachten (10,7 mm, Ø83, 8,2 Wdg.)", "confidence": "gerechnet", "note": "Band 45–56" },
-    "springSettleRear": { "value": 15, "unit": "mm", "source": "BMW-Syndikat, E46 mit KW-Gewinde", "confidence": "geschätzt", "note": "bis ca." }
+    "trackFront": {
+      "value": 1480,
+      "unit": "mm",
+      "source": "E46 Coupé, gerundet",
+      "confidence": "geschätzt"
+    },
+    "trackRear": {
+      "value": 1490,
+      "unit": "mm",
+      "source": "E46 Coupé, gerundet",
+      "confidence": "geschätzt"
+    },
+    "stockHeightFront": {
+      "value": 385,
+      "unit": "mm",
+      "source": "e46-forum.de",
+      "confidence": "geschätzt",
+      "note": "unbestätigt"
+    },
+    "stockHeightRear": {
+      "value": 365,
+      "unit": "mm",
+      "source": "e46-forum.de",
+      "confidence": "geschätzt",
+      "note": "unbestätigt"
+    },
+    "currentHeightFront": {
+      "value": 365,
+      "unit": "mm",
+      "source": "Fotoschätzung",
+      "confidence": "geschätzt",
+      "note": "360–370 mm, ±10"
+    },
+    "currentHeightRear": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "unbekannt – messen"
+    },
+    "springRateFront": {
+      "value": 48,
+      "unit": "N/mm",
+      "source": "gerechnet aus Drahtdaten Gutachten (10,7 mm, Ø83, 8,2 Wdg.)",
+      "confidence": "gerechnet",
+      "note": "Band 45–56"
+    },
+    "springSettleRear": {
+      "value": 15,
+      "unit": "mm",
+      "source": "BMW-Syndikat, E46 mit KW-Gewinde",
+      "confidence": "geschätzt",
+      "note": "bis ca."
+    }
   },
   "frontHardpoints": {
     "note": "Frontansicht bei Serienhöhe; y = Abstand zur Fahrzeugmitte, z = Höhe über Fahrbahn",
-    "lowerArmInner": { "y": { "value": 355, "unit": "mm", "source": "E36/E46-Bauweise", "confidence": "geschätzt" }, "z": { "value": 178, "unit": "mm", "source": "E36/E46-Bauweise", "confidence": "geschätzt" } },
-    "lowerArmOuter": { "y": { "value": 675, "unit": "mm", "source": "E36/E46-Bauweise", "confidence": "geschätzt" }, "z": { "value": 160, "unit": "mm", "source": "E36/E46-Bauweise", "confidence": "geschätzt" } },
-    "strutTop": { "y": { "value": 520, "unit": "mm", "source": "Spreizung ≈ 13,5°", "confidence": "geschätzt" }, "z": { "value": 800, "unit": "mm", "source": "Spreizung ≈ 13,5°", "confidence": "geschätzt" } },
-    "maxCamberOffsetAtTop": { "value": 0.5, "unit": "deg", "source": "Dom nach innen drücken, Langlöcher", "confidence": "geschätzt" }
+    "lowerArmInner": {
+      "y": {
+        "value": 355,
+        "unit": "mm",
+        "source": "E36/E46-Bauweise",
+        "confidence": "geschätzt"
+      },
+      "z": {
+        "value": 178,
+        "unit": "mm",
+        "source": "E36/E46-Bauweise",
+        "confidence": "geschätzt"
+      }
+    },
+    "lowerArmOuter": {
+      "y": {
+        "value": 675,
+        "unit": "mm",
+        "source": "E36/E46-Bauweise",
+        "confidence": "geschätzt"
+      },
+      "z": {
+        "value": 160,
+        "unit": "mm",
+        "source": "E36/E46-Bauweise",
+        "confidence": "geschätzt"
+      }
+    },
+    "strutTop": {
+      "y": {
+        "value": 520,
+        "unit": "mm",
+        "source": "Spreizung ≈ 13,5°",
+        "confidence": "geschätzt"
+      },
+      "z": {
+        "value": 800,
+        "unit": "mm",
+        "source": "Spreizung ≈ 13,5°",
+        "confidence": "geschätzt"
+      }
+    },
+    "maxCamberOffsetAtTop": {
+      "value": 0.5,
+      "unit": "deg",
+      "source": "Dom nach innen drücken, Langlöcher",
+      "confidence": "geschätzt"
+    }
   },
   "calibration": {
-    "rollCenterFrontStock": { "value": 91, "unit": "mm", "source": "Modell; typ. McPherson 80–100 mm", "confidence": "gerechnet" },
-    "rollCenterFrontGradient": { "value": 2.6, "unit": "-", "source": "The Autopian (McPherson-Beispiel)", "confidence": "belegt", "note": "mm RZ je mm Tieferlegung" },
-    "rollCenterFrontCheck": { "loweringMm": 45, "expectedMin": -27, "expectedMax": -23, "source": "MRT Engineering (E36 tief)", "confidence": "belegt" },
-    "rollCenterRearStock": { "value": 110, "unit": "mm", "source": "", "confidence": "Annahme" },
-    "rollCenterRearGradientMin": { "value": 1.0, "unit": "-", "source": "", "confidence": "Annahme" },
-    "rollCenterRearGradientMax": { "value": 1.5, "unit": "-", "source": "", "confidence": "Annahme" },
-    "camberGainRearMin": { "value": 0.015, "unit": "-", "source": "", "confidence": "Annahme", "note": "°/mm" },
-    "camberGainRearMax": { "value": 0.03, "unit": "-", "source": "", "confidence": "Annahme", "note": "°/mm" }
+    "rollCenterFrontStock": {
+      "value": 91,
+      "unit": "mm",
+      "source": "Modell; typ. McPherson 80–100 mm",
+      "confidence": "gerechnet"
+    },
+    "rollCenterFrontGradient": {
+      "value": 2.6,
+      "unit": "-",
+      "source": "The Autopian (McPherson-Beispiel)",
+      "confidence": "belegt",
+      "note": "mm RZ je mm Tieferlegung"
+    },
+    "rollCenterFrontCheck": {
+      "loweringMm": 45,
+      "expectedMin": -27,
+      "expectedMax": -23,
+      "source": "MRT Engineering (E36 tief)",
+      "confidence": "belegt"
+    },
+    "rollCenterRearStock": {
+      "value": 110,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme"
+    },
+    "rollCenterRearGradientMin": {
+      "value": 1.0,
+      "unit": "-",
+      "source": "",
+      "confidence": "Annahme"
+    },
+    "rollCenterRearGradientMax": {
+      "value": 1.5,
+      "unit": "-",
+      "source": "",
+      "confidence": "Annahme"
+    },
+    "camberGainRearMin": {
+      "value": 0.015,
+      "unit": "-",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "°/mm"
+    },
+    "camberGainRearMax": {
+      "value": 0.03,
+      "unit": "-",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "°/mm"
+    }
   },
   "factoryAlignment": {
     "source": "BMW TIS 32 00, E46 Serienfahrwerk",
-    "front": { "camber": "-0°20' ±20'", "toeTotal": "0°14' ±8'", "caster": "5°26'" },
-    "rear": { "camber": "-1°30' ±15'", "toeTotal": "0°16' ±6'" }
+    "front": {
+      "camber": "-0°20' ±20'",
+      "toeTotal": "0°14' ±8'",
+      "caster": "5°26'"
+    },
+    "rear": {
+      "camber": "-1°30' ±15'",
+      "toeTotal": "0°16' ±6'"
+    }
   },
   "presets": [
-    { "name": "Serie", "front": 385, "rear": 365 },
-    { "name": "Ist-Zustand", "front": 365, "rear": null },
-    { "name": "K · Keil", "front": 322, "rear": 320 },
-    { "name": "Alternative", "front": 325, "rear": 314 },
-    { "name": "Konservativ", "front": 330, "rear": null },
-    { "name": "Bruder (eingetragen)", "front": 330, "rear": 310 }
+    {
+      "name": "Serie",
+      "front": 385,
+      "rear": 365
+    },
+    {
+      "name": "Ist-Zustand",
+      "front": 365,
+      "rear": null
+    },
+    {
+      "name": "K · Keil",
+      "front": 322,
+      "rear": 320
+    },
+    {
+      "name": "Alternative",
+      "front": 325,
+      "rear": 314
+    },
+    {
+      "name": "Konservativ",
+      "front": 330,
+      "rear": null
+    },
+    {
+      "name": "Bruder (eingetragen)",
+      "front": 330,
+      "rear": 310
+    }
   ],
   "wheels": {
     "current": {
-      "front": { "diameterInch": 18, "widthJ": null, "et": null, "spacer": 0, "tire": "225/40 R18", "staticRadius": 305 },
-      "rear": { "diameterInch": 18, "widthJ": null, "et": null, "spacer": 0, "tire": "225/40 R18", "staticRadius": 305 },
-      "note": "Felgenbreite und ET eintragen"
+      "name": "BMW Styling 68 (M-Doppelspeiche)",
+      "front": {
+        "diameterInch": 17,
+        "widthJ": 7.5,
+        "et": 41,
+        "spacer": 0,
+        "tire": "225/45 R17",
+        "staticRadius": 304
+      },
+      "rear": {
+        "diameterInch": 17,
+        "widthJ": 8.5,
+        "et": 50,
+        "spacer": 0,
+        "tire": "245/40 R17",
+        "staticRadius": 301
+      },
+      "note": "Angabe Max 2026-11-01. staticRadius ≈ r − 13 mm (SPEC 7.1), nicht gemessen"
     }
   },
   "measurementsTodo": [
@@ -72,5 +295,57 @@
     "Radlaufprofil je Rad: 5–7 Punkte (Winkel, Höhe, seitlicher Abstand zur Radanlagefläche)",
     "Innenfreigang Radanlagefläche → Federbein/Federteller (VA) bzw. Dämpfer/Lenker (HA)",
     "Anlenkpunkte VA bei definierter Höhe"
-  ]
+  ],
+  "fitment": {
+    "note": "Messwerte waagerecht ab Radanlagefläche, Fahrzeug in Messhöhe (SPEC 9.5/9.6)",
+    "fenderLateralFront": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Radlaufkante oben seitlich ab Radanlagefläche, + = außen – messen"
+    },
+    "fenderLateralRear": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Radlaufkante oben seitlich ab Radanlagefläche, + = außen – messen"
+    },
+    "innerStrutFront": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Radanlagefläche → Federbein (Höhe Felgenhorn), nach innen – messen"
+    },
+    "innerPerchFront": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Radanlagefläche → Federteller (Höhe Reifenschulter), nach innen – messen"
+    },
+    "innerRear": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Radanlagefläche → Dämpfer/Lenker/Radhausschale, nach innen – messen"
+    },
+    "bumpTravelFront": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "freier Weg bis Anschlagpuffer – Kabelbinder am Dämpferrohr"
+    },
+    "bumpTravelRear": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "freier Weg bis Anschlagpuffer – Kabelbinder am Dämpferrohr"
+    }
+  }
 }

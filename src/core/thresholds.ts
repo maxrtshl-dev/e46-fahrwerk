@@ -9,3 +9,6 @@ export const LEGAL_MARGIN_WARN = 3; // mm
 
 /** SPEC 7.1: statischer Radius ohne Messung ≈ r − 13 mm. */
 export const TIRE_DEFLECTION_DEFAULT = 13; // mm
+
+/** SPEC 7.1: Hornbreite je Seite, typ. 6–7 mm. */
+export const HORN_WIDTH_DEFAULT = 6.5; // mm

@@ -83,7 +83,17 @@ export interface E46Data {
   };
   presets: Preset[];
   wheels: {
-    current: { front: WheelSpec; rear: WheelSpec; note?: string };
+    current: { name?: string; front: WheelSpec; rear: WheelSpec; note?: string };
+  };
+  fitment: {
+    note: string;
+    fenderLateralFront: Val;
+    fenderLateralRear: Val;
+    innerStrutFront: Val;
+    innerPerchFront: Val;
+    innerRear: Val;
+    bumpTravelFront: Val;
+    bumpTravelRear: Val;
   };
   measurementsTodo: string[];
 }

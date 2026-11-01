@@ -1,6 +1,8 @@
 import { Controls } from "../ui/Controls";
 import { FrontView } from "../ui/FrontView";
 import { InputsPanel, ResultsPanel } from "../ui/ResultsPanel";
+import { FitmentPanel } from "../ui/Fitment";
+import { MeasurementsPanel, WheelsPanel } from "../ui/Wheels";
 import { useComputed } from "./compute";
 import { data, useSetup } from "./store";
 
@@ -22,9 +24,12 @@ export function App() {
         <div className="col-view">
           <FrontView axle={c.axle} tire={c.tire} heightFront={s.heightFront} />
           <ResultsPanel c={c} roll={s.roll} />
+          <FitmentPanel c={c} />
         </div>
         <div className="col-side">
           <Controls />
+          <WheelsPanel />
+          <MeasurementsPanel />
           <InputsPanel />
         </div>
       </main>
