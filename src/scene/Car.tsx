@@ -7,7 +7,9 @@ import type { SideResult } from "../core/frontAxle";
 import { fmtMm } from "../core/format";
 import type { TwoLinkResult } from "../core/twoLink";
 import { MM_PER_INCH, tireRadius, wheelLateralShift, rimWidthMm, type TireSize } from "../core/tire";
-import { archEdge, between, bodyProfile, bodyToRoad, cabinProfile, Helix, v3, VIS } from "./geometry";
+import { archEdge, between, bodyToRoad, Helix, v3 } from "./geometry";
+import { archCutMaterial, buildE46Body } from "./e46Body";
+import { styling68Hub, styling68Star } from "./styling68";
 
 const DEG = Math.PI / 180;
 
@@ -19,6 +21,7 @@ export interface Palette {
   spring: string;
   rc: string;
   edge: string;
+  glass: string;
 }
 
 interface Look {
@@ -60,7 +63,7 @@ function Joint({ p, r, color, opacity }: { p: THREE.Vector3; r: number; color: s
   );
 }
 
-/** Rad: Reifen (Rotationskörper), Felgenbett, Radstern an der Radanlagefläche. Achse = y. */
+/** Rad: Reifen (Rotationskörper), Felgenbett, Stern im Stil Styling 68. Achse = y. */
 function Wheel({
   center,
   camberDeg,
@@ -98,7 +101,8 @@ function Wheel({
   const { palette, opacity } = look;
   // links: Sturz negativ → oben nach innen (−y) = positive Drehung um x; rechts gespiegelt
   const rotX = side === 1 ? -camberDeg * DEG : camberDeg * DEG;
-  const spokes = 10;
+  const star = useMemo(() => styling68Star({ rimR, hubFace: et, lip: b / 2 }), [rimR, et, b]);
+  const hub = useMemo(() => styling68Hub({ rimR, hubFace: et, lip: b / 2 }), [rimR, et, b]);
   return (
     <group position={center} rotation={[rotX, 0, side === 1 ? 0 : Math.PI]}>
       <mesh geometry={lathe}>
@@ -115,17 +119,18 @@ function Wheel({
         <cylinderGeometry args={[rimR - 8, rimR - 8, b, 48, 1, true]} />
         <meshStandardMaterial color={palette.rim} metalness={0.6} roughness={0.35} side={THREE.DoubleSide} transparent={opacity < 1} opacity={opacity} />
       </mesh>
-      {/* Radstern: Nabe an der Radanlagefläche (ET nach außen), Speichen bis zum äußeren Felgenhorn */}
-      <mesh position={[0, et, 0]}>
-        <cylinderGeometry args={[70, 70, 26, 24]} />
-        <Mat color={palette.rim} opacity={opacity} metal={0.6} />
+      {/* Stern Styling 68: innen auf der Radanlagefläche (ET), außen bis zum Horn gewölbt */}
+      <mesh geometry={star}>
+        <meshStandardMaterial color={palette.rim} metalness={0.75} roughness={0.28} transparent={opacity < 1} opacity={opacity} />
       </mesh>
-      {Array.from({ length: spokes }, (_, i) => {
-        const a = (i / spokes) * Math.PI * 2 + (i % 2 ? 0.09 : -0.09);
-        const inner = v3(70 * Math.cos(a), et, 70 * Math.sin(a));
-        const outer = v3((rimR - 14) * Math.cos(a), b / 2 - 6, (rimR - 14) * Math.sin(a));
-        return <Rod key={i} a={inner} b={outer} r={11} color={palette.rim} opacity={opacity} />;
-      })}
+      <mesh geometry={hub}>
+        <meshStandardMaterial color={palette.rim} metalness={0.6} roughness={0.4} transparent={opacity < 1} opacity={opacity} />
+      </mesh>
+      {/* äußeres Felgenhorn */}
+      <mesh position={[0, b / 2, 0]} rotation={[Math.PI / 2, 0, 0]}>
+        <torusGeometry args={[rimR - 2, 7, 10, 64]} />
+        <meshStandardMaterial color={palette.rim} metalness={0.75} roughness={0.25} transparent={opacity < 1} opacity={opacity} />
+      </mesh>
     </group>
   );
 }
@@ -213,43 +218,56 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
   const refR = d.wheels.current.rear;
 
   const { matrix, rcF, rcR } = useMemo(() => carPose(c), [c]);
-  const halfW = Math.max(d.vehicle.trackFront.value ?? 1480, d.vehicle.trackRear.value ?? 1490) / 2 + VIS.fenderOverTrack;
   const zcF = refF.staticRadius;
   const zcR = refR.staticRadius;
   const archF = d.vehicle.stockHeightFront.value ?? 385;
   const archR = d.vehicle.stockHeightRear.value ?? 365;
 
-  const body = useMemo(() => {
-    const g = new THREE.ExtrudeGeometry(bodyProfile({ wheelbase: wb, centerZFront: zcF, centerZRear: zcR, archFront: archF, archRear: archR }), {
-      depth: 2 * halfW,
-      bevelEnabled: false,
-    });
-    return g;
-  }, [wb, zcF, zcR, archF, archR, halfW]);
-  const cabin = useMemo(() => new THREE.ExtrudeGeometry(cabinProfile(), { depth: 2 * halfW - 260, bevelEnabled: false }), [halfW]);
+  const { palette, opacity } = look;
+  const v = d.vehicle;
+  const dims = {
+    length: v.bodyLength.value ?? 4488,
+    width: v.bodyWidth.value ?? 1757,
+    height: v.bodyHeight.value ?? 1369,
+    wheelbase: wb,
+    overhangFront: v.overhangFront.value ?? 790,
+  };
+  const halfW = dims.width / 2;
+  const body = useMemo(
+    () => buildE46Body(dims, { paint: new THREE.Color(palette.body), glass: new THREE.Color(palette.glass) }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [dims.length, dims.width, dims.height, dims.wheelbase, dims.overhangFront, palette.body, palette.glass],
+  );
+  const bodyMat = useMemo(
+    () =>
+      archCutMaterial({
+        opacity: 0.22 * look.opacity,
+        innerY: halfW * 0.55,
+        arches: [
+          { x: 0, z: zcF, r: archF },
+          { x: -wb, z: zcR, r: archR },
+        ],
+      }),
+    [look.opacity, halfW, zcF, zcR, archF, archR, wb],
+  );
 
   const tf = c.fitFront.wheel.tire;
   const tr = c.fitRear.wheel.tire;
   const shiftF = wheelLateralShift(refF.et ?? s.wheels.front.et, s.wheels.front.et, s.wheels.front.spacer);
   const shiftR = wheelLateralShift(refR.et ?? s.wheels.rear.et, s.wheels.rear.et, s.wheels.rear.spacer);
-  const { palette, opacity } = look;
-
   const axisPts = rcF && rcR ? [rcF.clone().lerp(rcR, -0.25), rcR.clone().lerp(rcF, -0.25)] : null;
 
   return (
     <group matrixAutoUpdate={false} matrix={matrix}>
       {look.showBody && (
         <>
-          {/* Extrusion läuft entlang lokal z → um x drehen, damit sie entlang −y läuft */}
-          <mesh geometry={body} rotation={[Math.PI / 2, 0, 0]} position={[0, halfW, 0]} renderOrder={2}>
-            <meshStandardMaterial color={palette.body} transparent opacity={0.16 * opacity} depthWrite={false} side={THREE.DoubleSide} />
-          </mesh>
-          <mesh geometry={cabin} rotation={[Math.PI / 2, 0, 0]} position={[0, halfW - 130, 0]} renderOrder={2}>
-            <meshStandardMaterial color={palette.body} transparent opacity={0.1 * opacity} depthWrite={false} side={THREE.DoubleSide} />
-          </mesh>
+          <mesh geometry={body.geometry} material={bodyMat} renderOrder={2} />
+          {body.lines.map((pts, i) => (
+            <Line key={`l${i}`} points={pts} color={palette.edge} lineWidth={1.2} transparent opacity={0.55 * opacity} />
+          ))}
           {[1, -1].flatMap((sd) => [
-            <Line key={`f${sd}`} points={archEdge(0, zcF, archF, sd * halfW)} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
-            <Line key={`r${sd}`} points={archEdge(-wb, zcR, archR, sd * halfW)} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
+            <Line key={`f${sd}`} points={archEdge(0, zcF, archF, sd * (halfW - 8))} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
+            <Line key={`r${sd}`} points={archEdge(-wb, zcR, archR, sd * (halfW - 8))} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
           ])}
         </>
       )}

@@ -4,7 +4,7 @@
     "type": "346C",
     "engine": "M52TU B28",
     "coilover": "DTSline (Teilegutachten 14-TAAS-0183/1K)",
-    "version": "2026-11-01c",
+    "version": "2026-11-01d",
     "conventions": "ISO 8855 (x vorn, y links, z oben), mm, Grad dezimal; Sturz negativ = oben innen; Spur positiv = Vorspur; Höhe = Radmitte bis Radlaufkante"
   },
   "limits": {
@@ -120,6 +120,32 @@
       "unit": "mm",
       "source": "BMW Technische Daten E46 Coupé",
       "confidence": "belegt"
+    },
+    "bodyLength": {
+      "value": 4488,
+      "unit": "mm",
+      "source": "BMW Technische Daten E46 Coupé (Vor-Facelift), aus dem Gedächtnis – prüfen",
+      "confidence": "geschätzt"
+    },
+    "bodyWidth": {
+      "value": 1757,
+      "unit": "mm",
+      "source": "BMW Technische Daten E46 Coupé (Vor-Facelift), aus dem Gedächtnis – prüfen",
+      "confidence": "geschätzt",
+      "note": "ohne Spiegel"
+    },
+    "bodyHeight": {
+      "value": 1369,
+      "unit": "mm",
+      "source": "BMW Technische Daten E46 Coupé (Vor-Facelift), aus dem Gedächtnis – prüfen",
+      "confidence": "geschätzt"
+    },
+    "overhangFront": {
+      "value": 790,
+      "unit": "mm",
+      "source": "geschätzt aus Länge − Radstand",
+      "confidence": "Annahme",
+      "note": "nur für die 3D-Darstellung"
     }
   },
   "frontHardpoints": {

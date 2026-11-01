@@ -53,6 +53,10 @@ export interface E46Data {
     springRateFront: Val;
     springSettleRear: Val;
     wheelbase: Val;
+    bodyLength: Val;
+    bodyWidth: Val;
+    bodyHeight: Val;
+    overhangFront: Val;
   };
   rearEquivalent: {
     note: string;

@@ -89,8 +89,13 @@ FIN) hier ablegen.
   dem Rechenkern (Karosseriesystem); `bodyToRoad` legt die Karosserie so, dass
   die Fahrbahn waagerecht liegt → Tieferlegen, Nicken, Wanken sichtbar.
 - Lenker liegen vereinfacht in der Achsebene (x = 0 bzw. −Radstand).
-- Karosserie nur angedeutet; Maße in `scene/geometry.ts` (`VIS`) sind reine
-  Darstellung. Radlauf = Kreis um die Radmitte in Serienlage, Radius Serienhöhe.
+- Karosserie E46 Coupé als Loft aus Querschnitten (`scene/e46Body.ts`),
+  skaliert auf `vehicle.bodyLength/Width/Height/overhangFront` (geschätzt, aus
+  dem Gedächtnis – prüfen). Proportionen der Stationen sind reine Darstellung.
+  Radläufe per Shader ausgeschnitten: Kreis um die Radmitte in Serienlage,
+  Radius Serienhöhe – dieselbe Kante wie in `fitment.ts`.
+- Felge im Stil Styling 68 (`scene/styling68.ts`): 5 Doppelspeichen, gewölbt
+  von der Radanlagefläche (ET) bis zum Horn, Lochkreis 5×120. Stilisiert.
 - Radlage: Referenz-ET aus `wheels.current`, Abweichung und Spurplatte
   verschieben das Rad (`wheelLateralShift`).
 - Etiketten: eigene HTML-Ebene, per `useFrame` projiziert (drei `<Html>`
