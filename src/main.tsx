@@ -8,3 +8,12 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </StrictMode>,
 );
+
+// Offline (M6). Im Artifact-Rahmen ist das gesperrt – dann läuft die Seite ohne.
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js").catch(() => {
+      /* nicht erlaubt oder nicht verfügbar */
+    });
+  });
+}

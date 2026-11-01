@@ -1,0 +1,16 @@
+{
+  "name": "E46 Fahrwerk & Radhaus",
+  "short_name": "Fahrwerk",
+  "description": "Kinematik, Rollzentren und Radhaus-Freigang für den BMW E46 328Ci",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#12171b",
+  "theme_color": "#1a2126",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

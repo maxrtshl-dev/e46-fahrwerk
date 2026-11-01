@@ -1,7 +1,7 @@
 # E46 Fahrwerk & Radhaus
 
-Eigenständiges Projekt im Repo, unabhängig von `finanzen/`. Die Finanz-Regeln
-aus der Wurzel-`CLAUDE.md` gelten hier nicht.
+Eigenständiges Projekt. Entstanden im Finanz-Repo `Assistent`, Ziel ist ein
+eigenes öffentliches Repo mit GitHub Pages. Die Finanz-Regeln gelten hier nicht.
 
 - **Quelle der Wahrheit ist `SPEC.md`.** Fahrzeugdaten nur aus
   `public/e46_data.json` – keine Zahl im Code hart verdrahten (Ausnahme:
@@ -10,7 +10,10 @@ aus der Wurzel-`CLAUDE.md` gelten hier nicht.
   hat Vitest-Tests mit den Kalibrierwerten aus der JSON.
 - Prüfen: `npm test` und `npm run typecheck` (im Ordner `fahrwerk/`).
 - Lokal ansehen: `npm run dev`. Bauen: `npm run build` → `dist/`.
-- **Veröffentlicht als Artifact:** <https://claude.ai/artifact/32A3Gk5sV1rZguaADhD1Zf>
+- **Ziel-Hosting: GitHub Pages** aus eigenem Repo, Push auf `main` baut und
+  veröffentlicht. Service Worker entsteht beim Build (`vite.config.ts`),
+  Cache-Version = Hash der Dateiliste.
+- **Zusätzlich als Artifact:** <https://claude.ai/artifact/32A3Gk5sV1rZguaADhD1Zf>
   (Slug `105b9777-ce0e-45c2-acb9-c91f7a661406`). Nach jedem Build neu
   veröffentlichen mit `publish_files`, Modus `replace` – die Dateinamen in
   `dist/assets/` tragen einen Hash und ändern sich.
@@ -26,7 +29,7 @@ aus der Wurzel-`CLAUDE.md` gelten hier nicht.
 | M3 Radhaus-Freigang (`fitment.ts`, HA-Band `rearAxle.ts`, Räder je Achse, Messwerte) | fertig, 43 Tests gesamt |
 | M4 3D-Szene | offen |
 | M5 HA-Ersatzmodell (`twoLink.ts`), Rollachse (`rollAxis.ts`), Daten-Editor mit Überschreibungen, Checkliste, Export/Import | fertig, 55 Tests gesamt |
-| M6 PWA | offen |
+| M6 PWA: Manifest, Icons, Service Worker (offline geprüft), Pages-Workflow | fertig – wartet auf eigenes Repo |
 
 ## Modellannahmen M1 (bewusst, dokumentiert)
 
