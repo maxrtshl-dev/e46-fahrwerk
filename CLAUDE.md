@@ -94,6 +94,10 @@ FIN) hier ablegen.
   dem Gedächtnis – prüfen). Proportionen der Stationen sind reine Darstellung.
   Radläufe per Shader ausgeschnitten: Kreis um die Radmitte in Serienlage,
   Radius Serienhöhe – dieselbe Kante wie in `fitment.ts`.
+- `BodyModel` (in `e46Body.ts`) beantwortet Hautabfragen (`sideY`, `topZ`,
+  `surfaceX`); `e46Details.ts` projiziert darauf Scheiben (Hofmeister-Knick),
+  Fugen, Türgriff, Nieren, Scheinwerfer mit Ringen, Rückleuchten, Diffusor,
+  Endrohre und Spiegel. Formen nach Augenmaß, keine Logos.
 - Felge im Stil Styling 68 (`scene/styling68.ts`): 5 Doppelspeichen, gewölbt
   von der Radanlagefläche (ET) bis zum Horn, Lochkreis 5×120. Stilisiert.
 - Radlage: Referenz-ET aus `wheels.current`, Abweichung und Spurplatte

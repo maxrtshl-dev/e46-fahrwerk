@@ -1,11 +1,12 @@
 // Karosserie E46 Coupé als Loft aus Querschnitten – nur Darstellung, keine Rechengrundlage.
 // Koordinaten: Karosseriesystem in mm (x vorn ab Vorderachse, y links, z oben ab Fahrbahn in Serienlage).
 // Die Stationen sind Proportionen eines E46 Coupés, skaliert auf Länge/Breite/Höhe aus den Daten.
+// Das Oberflächenmodell (`BodyModel`) beantwortet „wo ist die Haut?“ – darauf setzen die Details auf.
 
 import * as THREE from "three";
 
 interface Station {
-  x: number; // relativ: 0 = Vorderachse, Längen in mm bezogen auf 4488/2725
+  x: number;
   zb: number; // Unterkante
   zt: number; // Oberkante Mitte (Haube, Dach, Deckel)
   belt: number; // Gürtellinie / Kotflügeloberkante
@@ -13,8 +14,8 @@ interface Station {
   hwTop: number; // halbe Breite der Oberfläche (Haube bzw. Dach) als Anteil
 }
 
-// Stationen von vorn nach hinten. x in mm für Referenzlänge 4488, Radstand 2725, Überhang vorn 790.
-const REF = { length: 4488, height: 1369, overhangFront: 790 };
+/** Referenzmaße, auf die sich die Stationen beziehen. */
+export const REF = { length: 4488, height: 1369, overhangFront: 790, wheelbase: 2725 };
 const STATIONS: Station[] = [
   { x: 790, zb: 270, zt: 610, belt: 610, hw: 0.78, hwTop: 0.56 },
   { x: 760, zb: 215, zt: 680, belt: 680, hw: 0.9, hwTop: 0.66 },
@@ -88,8 +89,7 @@ function densify(st: Station[], perSeg: number): Station[] {
       const s = {} as Station;
       for (const key of keys) {
         const [p0, p1, p2, p3] = [a[key], b[key], c[key], d[key]];
-        s[key] =
-          0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
+        s[key] = 0.5 * (2 * p1 + (-p0 + p2) * t + (2 * p0 - 5 * p1 + 4 * p2 - p3) * t * t + (-p0 + 3 * p1 - 3 * p2 + p3) * t * t * t);
       }
       out.push(s);
     }
@@ -106,68 +106,151 @@ export interface BodyDims {
   overhangFront: number;
 }
 
-export interface BodyMesh {
-  geometry: THREE.BufferGeometry;
-  /** Kantenlinien (Gürtellinie, Fensterlinie, Schweller, Dachmitte) je Seite. */
-  lines: THREE.Vector3[][];
+const SEG = 4; // Punkte je Querschnittsabschnitt
+/** Index des Kontrollpunkts k in der Halbsektion. */
+export const ctrl = (k: number) => k * SEG;
+
+/** Oberflächenmodell: Stationen mit fertig abgetasteter Halbsektion (y ≥ 0). */
+export class BodyModel {
+  readonly stations: Station[];
+  readonly halves: THREE.Vector2[][];
+  readonly halfW: number;
+  private readonly sx: number;
+  private readonly sxF: number;
+  readonly sz: number;
+
+  constructor(readonly dims: BodyDims) {
+    this.halfW = dims.width / 2;
+    this.sx = (dims.length - dims.overhangFront - dims.wheelbase) / (REF.length - REF.overhangFront - REF.wheelbase);
+    this.sxF = dims.overhangFront / REF.overhangFront;
+    this.sz = dims.height / REF.height;
+    this.stations = densify(STATIONS, 5).map((s) => ({
+      ...s,
+      x: this.mapX(s.x),
+      zb: s.zb * this.sz,
+      zt: s.zt * this.sz,
+      belt: s.belt * this.sz,
+    }));
+    const raw = this.stations.map((s) => spline2(halfSection(s, this.halfW), SEG));
+    // Catmull-Rom schießt an der breitesten Stelle über → Querrichtung auf die echte Breite skalieren
+    const maxY = Math.max(...raw.flat().map((p) => p.x));
+    const ky = this.halfW / maxY;
+    this.halves = raw.map((h) => h.map((p) => new THREE.Vector2(p.x * ky, p.y)));
+  }
+
+  /** x aus Referenzkoordinaten (Überhang vorn, Radstand, Überhang hinten getrennt skaliert). */
+  mapX(x: number): number {
+    const wb = this.dims.wheelbase;
+    if (x >= 0) return x * this.sxF;
+    if (x >= -REF.wheelbase) return (x / REF.wheelbase) * wb;
+    return -wb + (x + REF.wheelbase) * this.sx;
+  }
+  mapZ(z: number): number {
+    return z * this.sz;
+  }
+  isGlass(i: number): boolean {
+    return isGlass(this.stations[i]!);
+  }
+
+  /** Halbsektion an beliebiger Stelle x (lineare Interpolation zwischen Stationen). */
+  halfAt(x: number): THREE.Vector2[] {
+    const st = this.stations;
+    if (x >= st[0]!.x) return this.halves[0]!;
+    for (let i = 0; i < st.length - 1; i++) {
+      const a = st[i]!.x;
+      const b = st[i + 1]!.x;
+      if (x <= a && x >= b) {
+        const t = (a - x) / (a - b || 1);
+        const h0 = this.halves[i]!;
+        const h1 = this.halves[i + 1]!;
+        return h0.map((p, j) => p.clone().lerp(h1[j]!, t));
+      }
+    }
+    return this.halves[this.halves.length - 1]!;
+  }
+
+  /** Äußerste Lage der Haut (y ≥ 0) in Höhe z an Stelle x. */
+  sideY(x: number, z: number): number {
+    const h = this.halfAt(x);
+    let best = 0;
+    for (let i = 0; i < h.length - 1; i++) {
+      const p = h[i]!;
+      const q = h[i + 1]!;
+      if ((z - p.y) * (z - q.y) <= 0 && p.y !== q.y) {
+        const t = (z - p.y) / (q.y - p.y);
+        best = Math.max(best, p.x + (q.x - p.x) * t);
+      }
+    }
+    return best;
+  }
+
+  /** Höchste Lage der Haut bei Querlage y an Stelle x (Oberseite). */
+  topZ(x: number, y: number): number {
+    const h = this.halfAt(x);
+    const ay = Math.abs(y);
+    let best = -Infinity;
+    for (let i = ctrl(3); i < h.length - 1; i++) {
+      const p = h[i]!;
+      const q = h[i + 1]!;
+      if ((ay - p.x) * (ay - q.x) <= 0 && p.x !== q.x) {
+        const t = (ay - p.x) / (q.x - p.x);
+        best = Math.max(best, p.y + (q.y - p.y) * t);
+      }
+    }
+    return Number.isFinite(best) ? best : h[h.length - 1]!.y;
+  }
+
+  private inside(i: number, y: number, z: number): boolean {
+    // Punkt im geschlossenen Halbquerschnitt (Polygon inkl. Mittelachse)
+    const h = this.halves[i]!;
+    const ay = Math.abs(y);
+    let c = false;
+    for (let a = 0, b = h.length - 1; a < h.length; b = a++) {
+      const p = h[a]!;
+      const q = h[b]!;
+      if (p.y > z !== q.y > z && ay < ((q.x - p.x) * (z - p.y)) / (q.y - p.y) + p.x) c = !c;
+    }
+    return c;
+  }
+
+  /** Lage der Haut in Längsrichtung für Punkte an Front (von vorn gesucht) oder Heck. */
+  surfaceX(y: number, z: number, from: "front" | "rear"): number | null {
+    const n = this.stations.length;
+    const order = from === "front" ? [...Array(n).keys()] : [...Array(n).keys()].reverse();
+    for (const i of order) if (this.inside(i, y, z)) return this.stations[i]!.x;
+    return null;
+  }
 }
 
-const SEG = 4; // Punkte je Querschnittsabschnitt
+export interface BodyMesh {
+  geometry: THREE.BufferGeometry;
+  /** Kantenlinien (Schweller, Sicke, Dachmitte). */
+  lines: THREE.Vector3[][];
+  model: BodyModel;
+}
 
-export function buildE46Body(dims: BodyDims, colors: { paint: THREE.Color; glass: THREE.Color }): BodyMesh {
-  const halfW = dims.width / 2;
-  const sx = (dims.length - dims.overhangFront - dims.wheelbase) / (REF.length - REF.overhangFront - 2725);
-  const sxF = dims.overhangFront / REF.overhangFront;
-  const sz = dims.height / REF.height;
-  // x-Skalierung getrennt: Überhang vorn, Radstand, Überhang hinten
-  const mapX = (x: number) => {
-    if (x >= 0) return x * sxF;
-    if (x >= -2725) return (x / 2725) * dims.wheelbase;
-    return -dims.wheelbase + (x + 2725) * sx;
-  };
-  const stations = densify(STATIONS, 5).map((s) => ({
-    ...s,
-    x: mapX(s.x),
-    zb: s.zb * sz,
-    zt: s.zt * sz,
-    belt: s.belt * sz,
-  }));
-
-  const rings: THREE.Vector3[][] = [];
-  const glassRing: boolean[] = [];
-  const ringColors: THREE.Color[][] = [];
-  for (const s of stations) {
-    const half = spline2(halfSection(s, halfW), SEG);
-    const glass = isGlass(s);
-    const beltZ = Math.min(s.belt, s.zt - 8);
+export function buildE46Body(dims: BodyDims, colors: { paint: THREE.Color }): BodyMesh {
+  const model = new BodyModel(dims);
+  const rings: THREE.Vector3[][] = model.halves.map((half, i) => {
+    const x = model.stations[i]!.x;
     // Ring: rechte Seite (−y) von oben nach unten, dann linke Seite von unten nach oben
     const right = half
       .slice(1)
       .reverse()
-      .map((p) => new THREE.Vector3(s.x, -p.x, p.y));
-    const left = half.map((p) => new THREE.Vector3(s.x, p.x, p.y));
-    const ring = [...right, ...left];
-    rings.push(ring);
-    glassRing.push(glass);
-    ringColors.push(ring.map((p) => (glass && p.z > beltZ + 22 ? colors.glass : colors.paint)));
-  }
-
-  // Catmull-Rom schießt an der breitesten Stelle über → Querrichtung auf die echte Breite skalieren
-  const maxY = Math.max(...rings.flat().map((p) => Math.abs(p.y)));
-  const ky = halfW / maxY;
-  for (const p of rings.flat()) p.y *= ky;
+      .map((p) => new THREE.Vector3(x, -p.x, p.y));
+    const left = half.map((p) => new THREE.Vector3(x, p.x, p.y));
+    return [...right, ...left];
+  });
 
   const n = rings[0]!.length;
   const pos: number[] = [];
   const col: number[] = [];
   const idx: number[] = [];
-  rings.forEach((r, i) =>
-    r.forEach((p, j) => {
+  for (const r of rings)
+    for (const p of r) {
       pos.push(p.x, p.y, p.z);
-      const c = ringColors[i]![j]!;
-      col.push(c.r, c.g, c.b);
-    }),
-  );
+      col.push(colors.paint.r, colors.paint.g, colors.paint.b);
+    }
   for (let i = 0; i < rings.length - 1; i++) {
     for (let j = 0; j < n - 1; j++) {
       const a = i * n + j;
@@ -198,23 +281,16 @@ export function buildE46Body(dims: BodyDims, colors: { paint: THREE.Color; glass
   geometry.setIndex(idx);
   geometry.computeVertexNormals();
 
-  // Kantenlinien: Kontrollpunkt k der Halbsektion liegt auf Index k·SEG
-  const halfLen = 6 * SEG + 1;
-  const leftIndex = (k: number) => halfLen - 1 + k * SEG; // linke Hälfte beginnt bei halfLen−1 (Mitte unten)
-  const rightIndex = (k: number) => halfLen - 1 - k * SEG;
+  const halfLen = ctrl(6) + 1;
+  const leftIndex = (k: number) => halfLen - 1 + ctrl(k);
+  const rightIndex = (k: number) => halfLen - 1 - ctrl(k);
   const lines: THREE.Vector3[][] = [];
   for (const k of [2, 3]) {
     lines.push(rings.map((r) => r[leftIndex(k)]!));
     lines.push(rings.map((r) => r[rightIndex(k)]!));
   }
-  // Fensterlinie nur über die Glasfläche
-  const glassRings = rings.filter((_, i) => glassRing[i]);
-  if (glassRings.length > 1) {
-    lines.push(glassRings.map((r) => r[leftIndex(5)]!));
-    lines.push(glassRings.map((r) => r[rightIndex(5)]!));
-  }
   lines.push(rings.map((r) => r[leftIndex(6)]!)); // Dachmitte
-  return { geometry, lines };
+  return { geometry, lines, model };
 }
 
 /**
@@ -242,10 +318,7 @@ export function archCutMaterial(params: {
       .replace("#include <common>", "#include <common>\nvarying vec3 vBody;")
       .replace("#include <begin_vertex>", "#include <begin_vertex>\nvBody = position;");
     shader.fragmentShader = shader.fragmentShader
-      .replace(
-        "#include <common>",
-        "#include <common>\nvarying vec3 vBody;\nuniform vec3 uArch[2];\nuniform float uInnerY;",
-      )
+      .replace("#include <common>", "#include <common>\nvarying vec3 vBody;\nuniform vec3 uArch[2];\nuniform float uInnerY;")
       .replace(
         "#include <clipping_planes_fragment>",
         `#include <clipping_planes_fragment>

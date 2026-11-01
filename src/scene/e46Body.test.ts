@@ -5,7 +5,7 @@ import { styling68Star } from "./styling68";
 const dims = { length: 4488, width: 1757, height: 1369, wheelbase: 2725, overhangFront: 790 };
 
 describe("Karosserie E46 Coupé (Darstellung)", () => {
-  const body = buildE46Body(dims, { paint: new THREE.Color("#888"), glass: new THREE.Color("#222") });
+  const body = buildE46Body(dims, { paint: new THREE.Color("#888") });
   body.geometry.computeBoundingBox();
   const bb = body.geometry.boundingBox!;
   it("Außenmaße aus den Daten", () => {
@@ -16,10 +16,34 @@ describe("Karosserie E46 Coupé (Darstellung)", () => {
     expect(bb.max.z).toBeLessThanOrEqual(dims.height + 8);
     expect(bb.max.z).toBeGreaterThan(dims.height - 15);
   });
-  it("Kantenlinien vorhanden, Fensterlinie nur über Glas", () => {
-    expect(body.lines.length).toBe(7);
-    const window = body.lines[4]!;
-    expect(Math.min(...window.map((p) => p.z))).toBeGreaterThan(850);
+  it("Oberflächenmodell: Haut seitlich, oben, vorn, hinten", () => {
+    const m = body.model;
+    expect(m.sideY(-1500, 600)).toBeGreaterThan(dims.width / 2 - 25);
+    expect(m.sideY(-1500, 600)).toBeLessThanOrEqual(dims.width / 2 + 0.5);
+    expect(m.topZ(-1750, 0)).toBeGreaterThan(dims.height - 15);
+    const xf = m.surfaceX(0, 500, "front")!;
+    expect(xf).toBeGreaterThan(700);
+    const xr = m.surfaceX(0, 600, "rear")!;
+    expect(xr).toBeLessThan(-3600);
+  });
+});
+
+import { buildE46Details } from "./e46Details";
+
+describe("Details E46 (Darstellung)", () => {
+  const body = buildE46Body(dims, { paint: new THREE.Color("#888") });
+  const det = buildE46Details(body.model);
+  it("Seitenscheiben liegen auf der Haut, beidseitig", () => {
+    const glass = det.meshes.filter((d) => d.kind === "glass");
+    expect(glass.length).toBeGreaterThanOrEqual(4);
+    const g = glass[0]!.geometry;
+    g.computeBoundingBox();
+    expect(g.boundingBox!.min.z).toBeGreaterThan(850);
+    expect(g.boundingBox!.max.y).toBeLessThan(dims.width / 2 + 10);
+  });
+  it("Front- und Heckteile vorhanden", () => {
+    expect(det.meshes.some((d) => d.kind === "red")).toBe(true);
+    expect(det.lines.filter((l) => l.kind === "ring").length).toBe(4);
   });
 });
 

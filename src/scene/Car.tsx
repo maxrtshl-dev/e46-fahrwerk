@@ -9,6 +9,7 @@ import type { TwoLinkResult } from "../core/twoLink";
 import { MM_PER_INCH, tireRadius, wheelLateralShift, rimWidthMm, type TireSize } from "../core/tire";
 import { archEdge, between, bodyToRoad, Helix, v3 } from "./geometry";
 import { archCutMaterial, buildE46Body } from "./e46Body";
+import { buildE46Details, type DetailKind } from "./e46Details";
 import { styling68Hub, styling68Star } from "./styling68";
 
 const DEG = Math.PI / 180;
@@ -234,10 +235,23 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
   };
   const halfW = dims.width / 2;
   const body = useMemo(
-    () => buildE46Body(dims, { paint: new THREE.Color(palette.body), glass: new THREE.Color(palette.glass) }),
+    () => buildE46Body(dims, { paint: new THREE.Color(palette.body) }),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [dims.length, dims.width, dims.height, dims.wheelbase, dims.overhangFront, palette.body, palette.glass],
+    [dims.length, dims.width, dims.height, dims.wheelbase, dims.overhangFront, palette.body],
   );
+  const details = useMemo(() => buildE46Details(body.model), [body]);
+  const detailMats = useMemo(() => {
+    const t = (o: number) => ({ transparent: true, opacity: o * opacity, depthWrite: false, side: THREE.DoubleSide });
+    const mats: Record<DetailKind, THREE.Material> = {
+      glass: new THREE.MeshStandardMaterial({ color: palette.glass, roughness: 0.05, metalness: 0.4, ...t(0.55) }),
+      black: new THREE.MeshStandardMaterial({ color: "#14181b", roughness: 0.6, ...t(0.85) }),
+      chrome: new THREE.MeshStandardMaterial({ color: "#d9dee2", roughness: 0.15, metalness: 0.9, ...t(0.9) }),
+      lens: new THREE.MeshStandardMaterial({ color: "#e8f0f6", emissive: "#9fb4c4", emissiveIntensity: 0.25, roughness: 0.1, ...t(0.7) }),
+      red: new THREE.MeshStandardMaterial({ color: "#b3121b", emissive: "#5a0508", emissiveIntensity: 0.4, roughness: 0.2, ...t(0.85) }),
+      paint: new THREE.MeshStandardMaterial({ color: palette.body, roughness: 0.3, metalness: 0.3, ...t(0.5) }),
+    };
+    return mats;
+  }, [opacity, palette.body, palette.glass]);
   const bodyMat = useMemo(
     () =>
       archCutMaterial({
@@ -264,6 +278,19 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
           <mesh geometry={body.geometry} material={bodyMat} renderOrder={2} />
           {body.lines.map((pts, i) => (
             <Line key={`l${i}`} points={pts} color={palette.edge} lineWidth={1.2} transparent opacity={0.55 * opacity} />
+          ))}
+          {details.meshes.map((dm, i) => (
+            <mesh key={`d${i}`} geometry={dm.geometry} material={detailMats[dm.kind]} renderOrder={3} />
+          ))}
+          {details.lines.map((dl, i) => (
+            <Line
+              key={`dl${i}`}
+              points={dl.points}
+              color={dl.kind === "chrome" ? "#c9d0d5" : dl.kind === "ring" ? "#ffffff" : palette.edge}
+              lineWidth={dl.kind === "ring" ? 2.2 : dl.kind === "chrome" ? 1.8 : 1}
+              transparent
+              opacity={(dl.kind === "seam" ? 0.6 : 0.95) * opacity}
+            />
           ))}
           {[1, -1].flatMap((sd) => [
             <Line key={`f${sd}`} points={archEdge(0, zcF, archF, sd * (halfW - 8))} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
