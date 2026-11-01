@@ -3,17 +3,31 @@ import * as THREE from "three";
 
 /** Darstellungsmaße der Karosserie – nur Optik, keine Fahrzeugdaten. */
 export const VIS = {
-  overhangFront: 790,
-  overhangRear: 860,
-  sill: 190,
-  belt: 930,
-  roof: 1370,
-  cabinFrontX: -480, // Fuß A-Säule ab Vorderachse
-  roofFrontX: -1150,
-  roofRearX: -2150,
-  cabinRearX: -2700,
-  fenderOverTrack: 125, // halbe Breite über halbe Spurweite
+  sill: 190, // Unterkante der Radausschnitte
+  lipRadius: 9, // Bördelkante
+  linerGap: 30, // Radhausschale liegt so viel weiter außen als die Kante (radial)
+  linerDepth: 300, // Tiefe der Radhausschale nach innen
 };
+
+/** Radhausschale: Zylinderfläche um die Radmitte, von der Kante nach innen. */
+export function archLiner(xc: number, zc: number, r: number, yOuter: number, side: 1 | -1, n = 36): THREE.BufferGeometry {
+  const pts = archEdge(xc, zc, r, 0, n);
+  const pos: number[] = [];
+  const idx: number[] = [];
+  const yIn = yOuter - VIS.linerDepth;
+  pts.forEach((p) => {
+    pos.push(p.x, side * yOuter, p.z, p.x, side * yIn, p.z);
+  });
+  for (let i = 0; i < n; i++) {
+    const a = 2 * i;
+    idx.push(a, a + 1, a + 2, a + 1, a + 3, a + 2);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute("position", new THREE.Float32BufferAttribute(pos, 3));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
 
 export const v3 = (x: number, y: number, z: number) => new THREE.Vector3(x, y, z);
 
@@ -24,50 +38,6 @@ export function between(a: THREE.Vector3, b: THREE.Vector3) {
   const quaternion = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.clone().normalize());
   const position = new THREE.Vector3().addVectors(a, b).multiplyScalar(0.5);
   return { position, quaternion, length };
-}
-
-/** Seitenprofil der Karosserie (x, z) mit Radausschnitten als Kreisbogen um die Radmitte in Serienlage. */
-export function bodyProfile(p: {
-  wheelbase: number;
-  centerZFront: number;
-  centerZRear: number;
-  archFront: number; // Radius = Serienhöhe VA
-  archRear: number;
-}): THREE.Shape {
-  const { wheelbase, centerZFront, centerZRear, archFront, archRear } = p;
-  const xF = VIS.overhangFront;
-  const xR = -wheelbase - VIS.overhangRear;
-  const s = new THREE.Shape();
-  s.moveTo(xF, VIS.sill + 120);
-  s.lineTo(xF - 60, VIS.sill);
-  const arch = (xc: number, zc: number, r: number) => {
-    const dz = VIS.sill - zc;
-    const dx = Math.sqrt(Math.max(0, r * r - dz * dz));
-    s.lineTo(xc + dx, VIS.sill);
-    const a1 = Math.atan2(dz, dx);
-    const a2 = Math.PI - a1;
-    s.absarc(xc, zc, r, a1, a2, false);
-  };
-  arch(0, centerZFront, archFront);
-  arch(-wheelbase, centerZRear, archRear);
-  s.lineTo(xR + 40, VIS.sill);
-  s.lineTo(xR, VIS.sill + 160);
-  s.lineTo(xR + 30, VIS.belt - 80);
-  s.lineTo(xR + 120, VIS.belt);
-  s.lineTo(xF - 260, VIS.belt - 140);
-  s.lineTo(xF, VIS.sill + 340);
-  s.closePath();
-  return s;
-}
-
-export function cabinProfile(): THREE.Shape {
-  const s = new THREE.Shape();
-  s.moveTo(VIS.cabinFrontX, VIS.belt - 20);
-  s.lineTo(VIS.roofFrontX, VIS.roof);
-  s.lineTo(VIS.roofRearX, VIS.roof - 15);
-  s.lineTo(VIS.cabinRearX, VIS.belt - 20);
-  s.closePath();
-  return s;
 }
 
 /** Punkte der Radlaufkante (Kreisbogen) auf der Seitenwand y. */

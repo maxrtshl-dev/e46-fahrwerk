@@ -109,6 +109,11 @@ FIN) hier ablegen.
 - Felgen (`scene/styling68.ts`, `wheelStar`): Styling 68 mit 5, Styling 193 mit
   7 Doppelspeichen, gewölbt von der Radanlagefläche (ET) bis zum Horn,
   Lochkreis 5×120. Stilisiert.
+- Fitment in 3D (`scene/fitmentMarks.ts`): Bördelkante (Rohr) und Radhausschale
+  je Rad, Maße Spalt oben und Schulter ↔ Kante an den linken Rädern – dieselben
+  Werte wie `fitment.ts` (Test). Kante seitlich: `fitment.fenderLateral*` +
+  Radanlagefläche, ohne Messung auf der Karosseriehaut (als „Kante geschätzt“
+  beschriftet). Kameras „Fitment VL/HL“ und „Seite VL“; dort nur Maße dieser Achse.
 - Radlage: Referenz-ET aus `wheels.current`, Abweichung und Spurplatte
   verschieben das Rad (`wheelLateralShift`).
 - Etiketten: eigene HTML-Ebene, per `useFrame` projiziert (drei `<Html>`

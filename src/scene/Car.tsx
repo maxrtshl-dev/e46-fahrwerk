@@ -7,8 +7,10 @@ import type { SideResult } from "../core/frontAxle";
 import { fmtMm } from "../core/format";
 import type { TwoLinkResult } from "../core/twoLink";
 import { MM_PER_INCH, tireRadius, wheelLateralShift, rimWidthMm, type TireSize } from "../core/tire";
-import { archEdge, between, bodyToRoad, Helix, v3 } from "./geometry";
-import { archCutMaterial, buildE46Body } from "./e46Body";
+import { archEdge, archLiner, between, bodyToRoad, Helix, v3, VIS } from "./geometry";
+import { fitmentMarks, type WheelMark } from "./fitmentMarks";
+import type { E46Data } from "../core/data";
+import { archCutMaterial, buildE46Body, BodyModel, type BodyDims } from "./e46Body";
 import { buildE46Details, type DetailKind } from "./e46Details";
 import { styling68Hub, wheelStar } from "./styling68";
 import type { WheelStyle } from "../core/data";
@@ -31,6 +33,58 @@ interface Look {
   opacity: number; // 1 = voll, < 1 = Vergleichssetup
   showBody: boolean;
   labels: boolean;
+  dims?: boolean; // Fitment-Maße an den linken Rädern
+}
+
+export function bodyDims(d: E46Data): BodyDims {
+  const v = d.vehicle;
+  return {
+    length: v.bodyLength.value ?? 4488,
+    width: v.bodyWidth.value ?? 1757,
+    height: v.bodyHeight.value ?? 1369,
+    wheelbase: v.wheelbase.value ?? 2725,
+    overhangFront: v.overhangFront.value ?? 790,
+  };
+}
+
+/** Bördelkante als Rohr entlang des Radlaufs. */
+function Lip({ m, side, color, opacity }: { m: WheelMark; side: 1 | -1; color: string; opacity: number }) {
+  const geo = useMemo(() => {
+    const pts = archEdge(m.x, m.zc, m.archR + VIS.lipRadius, side * m.lipY, 48);
+    return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 96, VIS.lipRadius, 8, false);
+  }, [m.x, m.zc, m.archR, m.lipY, side]);
+  return (
+    <mesh geometry={geo}>
+      <meshStandardMaterial color={color} metalness={0.4} roughness={0.3} transparent opacity={0.75 * opacity} depthWrite={false} />
+    </mesh>
+  );
+}
+
+function Liner({ m, side, opacity }: { m: WheelMark; side: 1 | -1; opacity: number }) {
+  const geo = useMemo(() => archLiner(m.x, m.zc, m.archR + VIS.linerGap, m.lipY - VIS.lipRadius, side), [m.x, m.zc, m.archR, m.lipY, side]);
+  return (
+    <mesh geometry={geo}>
+      <meshStandardMaterial color="#1b2024" roughness={0.9} transparent opacity={0.35 * opacity} side={THREE.DoubleSide} depthWrite={false} />
+    </mesh>
+  );
+}
+
+/** Maßlinien: Spalt oben (senkrecht) und Schulter ↔ Kante (seitlich). */
+function FitDims({ m, color }: { m: WheelMark; color: string }) {
+  const out = m.lipY + 45;
+  const zTop = m.lipTop.z;
+  const zTire = m.tireTop.z;
+  const zLat = zTop + 45;
+  return (
+    <group>
+      <Line points={[m.tireTop, v3(m.x, out + 15, zTire)]} color={color} lineWidth={1.2} dashed dashSize={12} gapSize={8} />
+      <Line points={[m.lipTop, v3(m.x, out + 15, zTop)]} color={color} lineWidth={1.2} dashed dashSize={12} gapSize={8} />
+      <Line points={[v3(m.x, out, zTire), v3(m.x, out, zTop)]} color={color} lineWidth={2.5} />
+      <Line points={[v3(m.x, m.shoulderTop.y, m.shoulderTop.z), v3(m.x, m.shoulderTop.y, zLat + 15)]} color={color} lineWidth={1.2} dashed dashSize={12} gapSize={8} />
+      <Line points={[v3(m.x, m.lipY, zTop), v3(m.x, m.lipY, zLat + 15)]} color={color} lineWidth={1.2} dashed dashSize={12} gapSize={8} />
+      <Line points={[v3(m.x, m.shoulderTop.y, zLat), v3(m.x, m.lipY, zLat)]} color={color} lineWidth={2.5} />
+    </group>
+  );
 }
 
 function Mat({ color, opacity, metal = 0.1 }: { color: string; opacity: number; metal?: number }) {
@@ -205,9 +259,19 @@ export function carPose(c: Computed) {
 }
 
 /** Etiketten in Fahrbahnkoordinaten, für die HTML-Ebene über der Szene. */
-export function carLabels(c: Computed): { id: string; pos: THREE.Vector3; text: string }[] {
+export function carLabels(c: Computed, s?: Setup, model?: BodyModel, withDims = false): { id: string; pos: THREE.Vector3; text: string }[] {
   const p = carPose(c);
   const out: { id: string; pos: THREE.Vector3; text: string }[] = [];
+  if (withDims && s && model) {
+    for (const m of fitmentMarks(c, s, model)) {
+      const top = v3(m.x, m.lipY + 130, (m.tireTop.z + m.lipTop.z) / 2).applyMatrix4(p.matrix);
+      const lat = v3(m.x, (m.shoulderTop.y + m.lipY) / 2, m.lipTop.z + 110).applyMatrix4(p.matrix);
+      const side =
+        m.gapSide >= 0 ? `${fmtMm(m.gapSide, m.lipMeasured ? "gerechnet" : "Annahme")} innen` : `${fmtMm(-m.gapSide, m.lipMeasured ? "gerechnet" : "Annahme")} über Kante`;
+      out.push({ id: `${m.axle}-oben`, pos: top, text: `${m.axle} Spalt oben ${fmtMm(m.gapTop, "gerechnet")}` });
+      out.push({ id: `${m.axle}-seite`, pos: lat, text: `${m.axle} Schulter ${side}${m.lipMeasured ? "" : " · Kante geschätzt"}` });
+    }
+  }
   if (p.rcF) out.push({ id: "va", pos: p.rcF.clone().applyMatrix4(p.matrix), text: `RZ VA ${fmtMm(c.axle?.rollCenterHeight ?? null, c.kinConfidence, true)}` });
   if (p.rcR && p.rcRh !== null) out.push({ id: "ha", pos: p.rcR.clone().applyMatrix4(p.matrix), text: `RZ HA ${fmtMm(p.rcRh, c.rearConfidence, true)}` });
   return out;
@@ -228,14 +292,7 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
   const archR = d.vehicle.stockHeightRear.value ?? 365;
 
   const { palette, opacity } = look;
-  const v = d.vehicle;
-  const dims = {
-    length: v.bodyLength.value ?? 4488,
-    width: v.bodyWidth.value ?? 1757,
-    height: v.bodyHeight.value ?? 1369,
-    wheelbase: wb,
-    overhangFront: v.overhangFront.value ?? 790,
-  };
+  const dims = bodyDims(d);
   const halfW = dims.width / 2;
   const body = useMemo(
     () => buildE46Body(dims, { paint: new THREE.Color(palette.body) }),
@@ -243,6 +300,7 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
     [dims.length, dims.width, dims.height, dims.wheelbase, dims.overhangFront, palette.body],
   );
   const details = useMemo(() => buildE46Details(body.model), [body]);
+  const marks = useMemo(() => fitmentMarks(c, s, body.model), [c, s, body]);
   const detailMats = useMemo(() => {
     const t = (o: number) => ({ transparent: true, opacity: o * opacity, depthWrite: false, side: THREE.DoubleSide });
     const mats: Record<DetailKind, THREE.Material> = {
@@ -284,6 +342,14 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
           {body.lines.map((pts, i) => (
             <Line key={`l${i}`} points={pts} color={palette.edge} lineWidth={1.2} transparent opacity={0.55 * opacity} />
           ))}
+          {marks.flatMap((mk) =>
+            ([1, -1] as const).map((sd) => (
+              <group key={`${mk.axle}${sd}`}>
+                <Lip m={mk} side={sd} color={palette.body} opacity={opacity} />
+                <Liner m={mk} side={sd} opacity={opacity} />
+              </group>
+            )),
+          )}
           {details.meshes.map((dm, i) => (
             <mesh key={`d${i}`} geometry={dm.geometry} material={detailMats[dm.kind]} renderOrder={3} />
           ))}
@@ -297,10 +363,6 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
               opacity={(dl.kind === "seam" ? 0.6 : 0.95) * opacity}
             />
           ))}
-          {[1, -1].flatMap((sd) => [
-            <Line key={`f${sd}`} points={archEdge(0, zcF, archF, sd * (halfW - 8))} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
-            <Line key={`r${sd}`} points={archEdge(-wb, zcR, archR, sd * (halfW - 8))} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
-          ])}
         </>
       )}
 
@@ -357,6 +419,8 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
           />
         </>
       )}
+
+      {look.dims && marks.map((mk) => <FitDims key={`dim${mk.axle}`} m={mk} color={palette.rc} />)}
 
       {/* Rollzentren und Rollachse */}
       {rcF && <Joint p={rcF} r={34} color={palette.rc} opacity={opacity} />}

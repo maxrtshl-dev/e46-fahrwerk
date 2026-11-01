@@ -4,11 +4,12 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Grid, OrbitControls } from "@react-three/drei";
 import { computeAll, type Computed } from "../app/compute";
 import { data, useData, useSetup, type Setup } from "../app/store";
-import { Car, carLabels, type Palette } from "./Car";
+import { bodyDims, Car, carLabels, type Palette } from "./Car";
+import { BodyModel } from "./e46Body";
 
 // Szene in mm, Fahrzeugsystem ISO 8855 (x vorn, y links, z oben); Fahrbahn z = 0.
 
-type ViewId = "frei" | "front" | "heck" | "vl-aussen" | "vl-innen" | "hl-aussen";
+type ViewId = "frei" | "front" | "heck" | "vl-aussen" | "vl-innen" | "hl-aussen" | "fit-vl" | "fit-hl" | "seite-vl";
 const VIEWS: { id: ViewId; label: string }[] = [
   { id: "frei", label: "3D" },
   { id: "front", label: "Front VA" },
@@ -16,6 +17,9 @@ const VIEWS: { id: ViewId; label: string }[] = [
   { id: "vl-aussen", label: "Radhaus VL außen" },
   { id: "vl-innen", label: "Radhaus VL innen" },
   { id: "hl-aussen", label: "Radhaus HL außen" },
+  { id: "fit-vl", label: "Fitment VL (längs)" },
+  { id: "fit-hl", label: "Fitment HL (längs)" },
+  { id: "seite-vl", label: "Seite VL" },
 ];
 
 function camFor(v: ViewId, wb: number): { pos: [number, number, number]; target: [number, number, number]; fov: number } {
@@ -28,12 +32,28 @@ function camFor(v: ViewId, wb: number): { pos: [number, number, number]; target:
       return { pos: [700, 2300, 650], target: [0, 760, 450], fov: 35 };
     case "vl-innen":
       return { pos: [650, 150, 420], target: [0, 700, 480], fov: 55 };
+    case "fit-vl": // nah am Rad, längs der Flanke von vorn: Kante und Schulter fluchten
+      return { pos: [950, 1320, 980], target: [0, 830, 650], fov: 24 };
+    case "fit-hl":
+      return { pos: [-wb - 950, 1320, 970], target: [-wb, 830, 640], fov: 24 };
+    case "seite-vl":
+      return { pos: [0, 5200, 520], target: [0, 0, 520], fov: 13 };
     case "hl-aussen":
       return { pos: [-wb + 700, 2300, 650], target: [-wb, 760, 450], fov: 35 };
     default:
       return { pos: [3400, 3600, 1700], target: [-wb / 2, 0, 350], fov: 38 };
   }
 }
+
+/** In Rad-Ansichten nur die Maße dieser Achse zeigen. */
+const FOCUS: Partial<Record<ViewId, "VA" | "HA">> = {
+  "fit-vl": "VA",
+  "seite-vl": "VA",
+  "vl-aussen": "VA",
+  "vl-innen": "VA",
+  "fit-hl": "HA",
+  "hl-aussen": "HA",
+};
 
 function CameraRig({ view, wb }: { view: ViewId; wb: number }) {
   const { camera } = useThree();
@@ -88,11 +108,17 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
   const [view, setView] = useState<ViewId>("frei");
   const [compare, setCompare] = useState<string>("Serie");
   const [showBody, setShowBody] = useState(true);
+  const [showDims, setShowDims] = useState(true);
   const d = useData();
   const overrides = useSetup((st) => st.overrides);
   const pal = usePalette();
   const wb = d.vehicle.wheelbase.value ?? 2725;
-  const labels = useMemo(() => carLabels(c), [c]);
+  const model = useMemo(() => new BodyModel(bodyDims(d)), [d]);
+  const labels = useMemo(() => {
+    const all = carLabels(c, s, model, showDims);
+    const f = FOCUS[view];
+    return f ? all.filter((l) => l.id.startsWith(`${f}-`)) : all;
+  }, [c, s, model, showDims, view]);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const ghost = useMemo(() => {
@@ -127,6 +153,9 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
           <label className="check">
             <input type="checkbox" checked={showBody} onChange={(e) => setShowBody(e.target.checked)} /> Karosserie
           </label>
+          <label className="check">
+            <input type="checkbox" checked={showDims} onChange={(e) => setShowDims(e.target.checked)} /> Maße
+          </label>
         </div>
       </div>
       <div className="canvas-wrap">
@@ -152,7 +181,7 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
             infiniteGrid={false}
           />
           {ghost && <Car c={ghost} s={s} look={{ palette: pal.ghost, opacity: 0.35, showBody, labels: false }} />}
-          <Car c={c} s={s} look={{ palette: pal.main, opacity: 1, showBody, labels: true }} />
+          <Car c={c} s={s} look={{ palette: pal.main, opacity: 1, showBody, labels: true, dims: showDims }} />
           <LabelProjector labels={labels} refs={labelRefs} />
         </Canvas>
         {labels.map((l) => (
@@ -168,8 +197,9 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
         ))}
       </div>
       <p className="hint">
-        Ziehen = drehen, zwei Finger = zoomen/verschieben. Lenker in der Achsebene vereinfacht, Karosserie nur angedeutet (Radlauf = Kreis um die Radmitte in
-        Serienlage). Grau: Vergleichssetup ohne Federn und Wanken.
+        Ziehen = drehen, zwei Finger = zoomen/verschieben. Maße an den linken Rädern aus derselben Rechnung wie die Radhaus-Ampel. Radlauf = Kreis um die
+        Radmitte in Serienlage; die Kante sitzt seitlich auf der geschätzten Karosseriebreite, bis „Radlaufkante seitlich“ gemessen ist – dann an der
+        gemessenen Stelle. Grau: Vergleichssetup ohne Federn und Wanken.
       </p>
     </section>
   );
