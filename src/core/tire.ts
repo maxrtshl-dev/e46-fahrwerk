@@ -3,6 +3,35 @@
 
 export const MM_PER_INCH = 25.4;
 
+/** Hornhöhe J-Kontur (ETRTO), mm – Norm, keine Fahrzeugangabe. */
+export const RIM_FLANGE_HEIGHT_J = 17.5;
+
+/**
+ * Messfelge nach ETRTO-Faustregel (Breite in Zoll, auf 0,5" gerundet):
+ * ≈ 0,80 × Nennbreite ab Querschnitt 55, 0,85 bei 45–50, 0,89 bis 40.
+ * Trifft 205/55→6,5, 225/45→7,5, 225/40→8, 245/40→8,5, 255/35→9.
+ */
+export function measuringRimJ(t: TireSize): number {
+  const k = t.aspect >= 55 ? 0.8 : t.aspect >= 45 ? 0.85 : 0.89;
+  return Math.round(((t.widthMm * k) / MM_PER_INCH) * 2) / 2;
+}
+
+/**
+ * Querschnittsbreite auf der tatsächlichen Felge: Nennbreite gilt auf der Messfelge,
+ * je Zoll Felgenbreite ändert sie sich um ≈ 40 % (ETRTO-Faustregel).
+ */
+export function sectionWidthOnRim(t: TireSize, widthJ: number): number {
+  return t.widthMm + 0.4 * (widthJ - measuringRimJ(t)) * MM_PER_INCH;
+}
+
+/**
+ * BMW misst die Fahrzeughöhe vom Felgenhorn unten bis zur Radlaufkante.
+ * Umrechnung auf „Radmitte → Radlaufkante“ (SPEC 4).
+ */
+export function bmwHeightToCenter(bmwMm: number, rimInch: number): number {
+  return bmwMm - (rimInch * MM_PER_INCH) / 2 - RIM_FLANGE_HEIGHT_J;
+}
+
 export interface TireSize {
   widthMm: number; // Nennbreite, z. B. 225
   aspect: number; // Querschnitt in %, z. B. 40
@@ -67,13 +96,13 @@ export function rimEdgesWithHorn(r: RimInput): LateralEdges {
 }
 
 /**
- * Reifenschultern relativ zur Radanlagefläche.
- * Vereinfachung: Schulter steht je Seite um (Reifenbreite − Maulweite)/2 über
- * (negativ = Stretch). `bulgeOverride` ersetzt diesen Überstand, wenn bekannt.
+ * Reifenflanken (größte Breite) relativ zur Radanlagefläche – konservativ für den Freigang.
+ * Überstand je Seite = (Querschnittsbreite auf dieser Felge − Maulweite)/2, negativ = Stretch.
+ * `bulgeOverride` ersetzt den Überstand, wenn gemessen.
  */
 export function tireShoulders(t: TireSize, r: RimInput, bulgeOverride?: number): LateralEdges {
   const e = rimEdges(r);
-  const bulge = bulgeOverride ?? (t.widthMm - rimWidthMm(r.widthJ)) / 2;
+  const bulge = bulgeOverride ?? (sectionWidthOnRim(t, r.widthJ) - rimWidthMm(r.widthJ)) / 2;
   return { outer: e.outer + bulge, inner: e.inner - bulge };
 }
 

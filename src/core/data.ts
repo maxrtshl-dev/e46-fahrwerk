@@ -64,6 +64,9 @@ export interface E46Data {
     springRateFront: Val;
     springSettleRear: Val;
     wheelbase: Val;
+    trackReferenceEt: Val;
+    stockHeightSportFront: Val;
+    stockHeightSportRear: Val;
     bodyLength: Val;
     bodyWidth: Val;
     bodyHeight: Val;
@@ -101,6 +104,7 @@ export interface E46Data {
   };
   factoryAlignment: {
     source: string;
+    note?: string;
     front: { camber: string; toeTotal: string; caster: string };
     rear: { camber: string; toeTotal: string };
   };

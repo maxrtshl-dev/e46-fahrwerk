@@ -3,6 +3,7 @@
 
 import type { E46Data, PointVal } from "./data";
 import { req } from "./data";
+import { wheelPlaneY } from "./frontMcPherson";
 import { solveTwoLink, type TwoLinkGeometry, type TwoLinkResult } from "./twoLink";
 import { parseDegMin } from "./units";
 
@@ -47,7 +48,7 @@ export function rearGeometryFromData(data: E46Data): TwoLinkGeometry {
     lowerOuter: p(e.lowerOuter, "HA unten außen"),
     upperInner: p(e.upperInner, "HA oben innen"),
     upperOuter: p(e.upperOuter, "HA oben außen"),
-    wheelCenter: { y: req(data.vehicle.trackRear, "Spurweite HA") / 2, z: r },
+    wheelCenter: { y: wheelPlaneY(data, "rear"), z: r },
     stockCamberDeg: parseDegMin(data.factoryAlignment.rear.camber).value,
     referenceStaticRadius: r,
   };

@@ -108,8 +108,8 @@ Die vollständigen Werte stehen in `e46_data.json`. Zusammenfassung:
 ### Fahrzeug
 | Größe | Wert | Status |
 |---|---|---|
-| Spurweite VA / HA | 1480 / 1490 mm | gerundet |
-| Serienhöhe Radmitte–Radlauf | ≈ 385 / 365 mm | Forum, unbestätigt |
+| Spurweite VA / HA | ~~1480 / 1490~~ → 1471 / 1478 mm (mit Serienrad 7J×16 ET47) | Katalog (auto-data), geprüft 2026-11-01 |
+| Serienhöhe Radmitte–Radlauf | ~~385 / 365~~ → ≈ 371 / 337 mm (Sportfahrwerk ≈ 356 / 321) | gerechnet aus BMW-Sollhöhe 604/570 mm (Felgenhorn unten → Radlauf, 17"), geprüft 2026-11-01 |
 | Ist-Höhe VA (vor Umbau) | ≈ 360–370 mm | Fotoschätzung |
 | Federrate VA DTS | ≈ 48 N/mm (45–56) | gerechnet aus Drahtdaten |
 | Setzen der Federn HA | bis ≈ 15 mm | Erfahrungswert |
@@ -138,10 +138,10 @@ Die vollständigen Werte stehen in `e46_data.json`. Zusammenfassung:
 | HA | −1°30′ ±15′ | 0°16′ ±6′ gesamt | – |
 
 ### Persönliche Ziele / Referenzen
-- Wunsch-Setup „K“ (Keil): **322 / 320 mm**; Alternative 325 / 314 mm; konservativ ≈ 330 mm VA.
+- Wunsch-Setup „K“ (Keil): **322 / 320 mm** (= 49 / 17 mm unter Serie); Alternative 325 / 314 mm; konservativ ≈ 330 mm VA.
 - Referenz Bruder: AP-Gewinde, eingetragen 330 / 310 mm.
 - Sturz VA Ziel ≈ −1,5° bis −1°50′ (Dom nach innen gedrückt, max. ≈ 0,5° Versatz).
-- Sturz HA kommt nach Tieferlegung kaum unter ≈ −2°.
+- Sturz HA kommt nach Tieferlegung kaum unter ≈ −2°. (Mit den korrigierten Serienhöhen bestätigt das Modell das: K → ≈ −1°50′.)
 - Fahrverhalten: neutral mit Hang zum Übersteuern. Negativ-Referenz: früherer E90 (zu untersteuernd).
 - Reifen aktuell: ~~225/40 R18~~ → seit 2026-11-01 **BMW Styling 68**: VA 7,5J×17 ET41 mit 225/45 R17, HA 8,5J×17 ET50 mit 245/40 R17 (maßgeblich ist `e46_data.json`).
 
@@ -259,3 +259,21 @@ Im DataEditor als Checkliste anlegen:
 - Jede Kinematikfunktion hat Unit-Tests mit den Kalibrierwerten.
 - UI-Sprache: **Deutsch**.
 - Hinweis in der App: Ersetzt keine Achsvermessung und keine Abnahme.
+
+
+---
+
+## Prüfung 2026-11-01 (Recherche + Nachrechnung)
+
+| Größe | vorher | jetzt | Quelle |
+|---|---|---|---|
+| Länge / Breite / Höhe / Radstand | 4488 / 1757 / 1369 / 2725 (Gedächtnis) | bestätigt | ADAC Autokatalog 328Ci Coupé |
+| Spurweite VA / HA | 1480 / 1490 | 1471 / 1478 (mit 7J×16 ET47) | auto-data.net, encycarpedia |
+| Serienhöhe Radmitte → Kante | 385 / 365 (Forum) | 371 / 337, Sport 356 / 321 | BMW-Sollhöhe Felgenhorn → Radlauf 604/570 bzw. 589/554 (17"), − 215,9 − 17,5 |
+| Reifenflanke | Nennbreite unabhängig von der Felge | Nennbreite gilt auf der Messfelge, ±40 % je Zoll | ETRTO-Faustregel |
+
+Folgen: Tieferlegung bei K 49 / 17 statt 63 / 45 mm; HA-Sturz bei K ≈ −1°50′ statt −2°38′
+(passt zur Erfahrung oben); RZ VA bei K ≈ −40 statt −75 mm.
+
+Unsicher, nicht geändert: VA-Sturz Serie (Quellen −0°20′…−0°45′), Nachlauf (5°26′ vs. 5°36′ ±30′),
+Spreizung (Modell 13,6°, ein Forum nennt 15°31′), alle Anlenkpunkte.

@@ -77,10 +77,9 @@ FIN) hier ablegen.
   `rearEquivalent` (Annahme). Kalibriert auf die Bandmitte: RZ 110 mm,
   Gradient ≈ 1,27, Sturzzunahme ≈ 0,022 °/mm. Die Annahmebänder werden
   daneben weiter angezeigt.
-- **Widerspruch, offen:** Die SPEC sagt, der HA-Sturz komme nach dem
-  Tieferlegen kaum unter ≈ −2°. Das Annahmeband liefert bei 45 mm tiefer
-  −2°11′…−2°51′. Ein Vermessungsprotokoll bei bekannter Höhe klärt das; dann
-  `calibration.camberGainRear*` anpassen und `rearEquivalent` neu kalibrieren.
+- **Widerspruch aufgelöst (2026-11-01):** Er kam von der falschen Serienhöhe HA
+  (365 statt ≈ 337). K ist hinten nur 17 mm unter Serie → Sturz ≈ −1°50′, passt
+  zur SPEC-Erfahrung „kaum unter −2°“. Vermessungsprotokoll bleibt der Prüfstein.
 - Rollachse statisch (nur Höhen), Radstand 2725 mm.
 - Eigene Werte: Überschreibungen je JSON-Pfad (`store.overrides`), nur im
   Browser. „Kopieren“ liefert JSON `{pfad: Val}` – das kommt per Chat zu Claude
@@ -88,6 +87,10 @@ FIN) hier ablegen.
 
 ## Annahmen M4
 
+- Siehe „Prüfung 2026-11-01“ am Ende der SPEC: Spurweite, Serienhöhe und
+  Reifenflanke korrigiert. Radebene = Spurweite/2 + `trackReferenceEt` − ET des
+  Referenzrads (`wheelPlaneY`). BMW-Höhen (Felgenhorn → Radlauf) mit
+  `bmwHeightToCenter` umrechnen.
 - Szene in mm im Fahrzeugsystem (ISO 8855, z oben). Achsen kommen direkt aus
   dem Rechenkern (Karosseriesystem); `bodyToRoad` legt die Karosserie so, dass
   die Fahrbahn waagerecht liegt → Tieferlegen, Nicken, Wanken sichtbar.

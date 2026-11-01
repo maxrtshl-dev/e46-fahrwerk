@@ -4,7 +4,7 @@
     "type": "346C",
     "engine": "M52TU B28",
     "coilover": "DTSline (Teilegutachten 14-TAAS-0183/1K)",
-    "version": "2026-11-01e",
+    "version": "2026-11-01f",
     "conventions": "ISO 8855 (x vorn, y links, z oben), mm, Grad dezimal; Sturz negativ = oben innen; Spur positiv = Vorspur; Höhe = Radmitte bis Radlaufkante"
   },
   "limits": {
@@ -62,30 +62,32 @@
   },
   "vehicle": {
     "trackFront": {
-      "value": 1480,
+      "value": 1471,
       "unit": "mm",
-      "source": "E46 Coupé, gerundet",
-      "confidence": "geschätzt"
+      "source": "auto-data.net (328Ci Coupé); ADAC/encycarpedia nennen für 325Ci 1471/1483",
+      "confidence": "geschätzt",
+      "note": "Katalogwert, mit Serienrad 7J×16 ET47"
     },
     "trackRear": {
-      "value": 1490,
+      "value": 1478,
       "unit": "mm",
-      "source": "E46 Coupé, gerundet",
-      "confidence": "geschätzt"
+      "source": "auto-data.net (328Ci Coupé); ADAC/encycarpedia nennen für 325Ci 1471/1483",
+      "confidence": "geschätzt",
+      "note": "Katalogwert, mit Serienrad 7J×16 ET47"
     },
     "stockHeightFront": {
-      "value": 385,
+      "value": 371,
       "unit": "mm",
-      "source": "e46-forum.de",
-      "confidence": "geschätzt",
-      "note": "unbestätigt"
+      "source": "BMW-Sollhöhe Serienfahrwerk 17\": VA 604 / HA 570 mm Felgenhorn unten → Radlaufkante (TIS, zitiert e46fanatics) − 17\"/2 − J-Horn 17,5",
+      "confidence": "gerechnet",
+      "note": "Toleranz ±10 (Normallage). Früher 385 (Forum, unbestätigt)"
     },
     "stockHeightRear": {
-      "value": 365,
+      "value": 337,
       "unit": "mm",
-      "source": "e46-forum.de",
-      "confidence": "geschätzt",
-      "note": "unbestätigt"
+      "source": "BMW-Sollhöhe Serienfahrwerk 17\": VA 604 / HA 570 mm Felgenhorn unten → Radlaufkante (TIS, zitiert e46fanatics) − 17\"/2 − J-Horn 17,5",
+      "confidence": "gerechnet",
+      "note": "Toleranz ±10 (Normallage). Früher 365 (Forum, unbestätigt)"
     },
     "currentHeightFront": {
       "value": 365,
@@ -118,27 +120,27 @@
     "wheelbase": {
       "value": 2725,
       "unit": "mm",
-      "source": "BMW Technische Daten E46 Coupé",
+      "source": "ADAC Autokatalog 328Ci Coupé (04/99–06/00)",
       "confidence": "belegt"
     },
     "bodyLength": {
       "value": 4488,
       "unit": "mm",
-      "source": "BMW Technische Daten E46 Coupé (Vor-Facelift), aus dem Gedächtnis – prüfen",
-      "confidence": "geschätzt"
+      "source": "ADAC Autokatalog 328Ci Coupé (04/99–06/00)",
+      "confidence": "belegt"
     },
     "bodyWidth": {
       "value": 1757,
       "unit": "mm",
-      "source": "BMW Technische Daten E46 Coupé (Vor-Facelift), aus dem Gedächtnis – prüfen",
-      "confidence": "geschätzt",
-      "note": "ohne Spiegel"
+      "source": "ADAC Autokatalog 328Ci Coupé (04/99–06/00)",
+      "confidence": "belegt",
+      "note": "ohne Spiegel (mit: 1950)"
     },
     "bodyHeight": {
       "value": 1369,
       "unit": "mm",
-      "source": "BMW Technische Daten E46 Coupé (Vor-Facelift), aus dem Gedächtnis – prüfen",
-      "confidence": "geschätzt"
+      "source": "ADAC Autokatalog 328Ci Coupé (04/99–06/00)",
+      "confidence": "belegt"
     },
     "overhangFront": {
       "value": 790,
@@ -146,6 +148,27 @@
       "source": "geschätzt aus Länge − Radstand",
       "confidence": "Annahme",
       "note": "nur für die 3D-Darstellung"
+    },
+    "trackReferenceEt": {
+      "value": 47,
+      "unit": "mm",
+      "source": "Serienrad 328Ci 7J×16 ET47, 205/55 R16 (wheel-size.com, bimmerworld)",
+      "confidence": "belegt",
+      "note": "ET, mit der die Spurweite gilt → Lage der Radanlagefläche"
+    },
+    "stockHeightSportFront": {
+      "value": 356,
+      "unit": "mm",
+      "source": "BMW-Sollhöhe Sportfahrwerk 17\": VA 589 / HA 554 mm (TIS, zitiert e46fanatics), umgerechnet wie Serie",
+      "confidence": "gerechnet",
+      "note": "M-Sportfahrwerk −15 mm"
+    },
+    "stockHeightSportRear": {
+      "value": 321,
+      "unit": "mm",
+      "source": "BMW-Sollhöhe Sportfahrwerk 17\": VA 589 / HA 554 mm (TIS, zitiert e46fanatics), umgerechnet wie Serie",
+      "confidence": "gerechnet",
+      "note": "M-Sportfahrwerk −16 mm"
     }
   },
   "frontHardpoints": {
@@ -263,13 +286,19 @@
     "rear": {
       "camber": "-1°30' ±15'",
       "toeTotal": "0°16' ±6'"
-    }
+    },
+    "note": "Quellen streuen: VA-Sturz −0°20′…−0°45′ (Sportfahrwerk 330i/330Ci −1,1…−0,4°), Nachlauf 5°36′ ±30′ (TIS M3 CSL; 330Ci Sport 5,1…6,1°), HA-Sturz −1°30′…−1°50′. Werte hier aus SPEC, bis ein Vermessungsprotokoll vorliegt."
   },
   "presets": [
     {
       "name": "Serie",
-      "front": 385,
-      "rear": 365
+      "front": 371,
+      "rear": 337
+    },
+    {
+      "name": "Serie Sportfahrwerk",
+      "front": 356,
+      "rear": 321
     },
     {
       "name": "Ist-Zustand",

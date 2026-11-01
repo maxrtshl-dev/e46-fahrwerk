@@ -52,9 +52,22 @@ export interface FrontGeometry {
 }
 
 /**
+ * Seitliche Lage der Radebene des Referenzrads (wheels.current) ab Fahrzeugmitte:
+ * Radanlagefläche = Spurweite/2 + ET des Rads, mit dem die Spurweite gilt;
+ * Radebene = Radanlagefläche − ET des Referenzrads.
+ */
+export function wheelPlaneY(data: E46Data, axle: "front" | "rear"): number {
+  const track = req(axle === "front" ? data.vehicle.trackFront : data.vehicle.trackRear, "Spurweite");
+  const etTrack = data.vehicle.trackReferenceEt?.value ?? null;
+  const w = data.wheels.current[axle];
+  if (etTrack === null || w.et === null) return track / 2;
+  return track / 2 + etTrack - w.et;
+}
+
+/**
  * Geometrie aus den Daten. Annahme: die Höhen der Anlenkpunkte gelten mit dem
- * aktuell eingetragenen Rad (statischer Radius) in Serienhöhe; Radmitte liegt
- * auf halber Spurweite.
+ * aktuell eingetragenen Rad (statischer Radius) in Serienhöhe; die Radmitte liegt
+ * in der Radebene des Referenzrads (`wheelPlaneY`).
  */
 export function frontGeometryFromData(data: E46Data): FrontGeometry {
   const hp = data.frontHardpoints;
@@ -63,7 +76,7 @@ export function frontGeometryFromData(data: E46Data): FrontGeometry {
     lowerArmInner: { y: req(hp.lowerArmInner.y), z: req(hp.lowerArmInner.z) },
     lowerArmOuter: { y: req(hp.lowerArmOuter.y), z: req(hp.lowerArmOuter.z) },
     strutTop: { y: req(hp.strutTop.y), z: req(hp.strutTop.z) },
-    wheelCenter: { y: req(data.vehicle.trackFront, "Spurweite VA") / 2, z: r },
+    wheelCenter: { y: wheelPlaneY(data, "front"), z: r },
     stockCamberDeg: parseDegMin(data.factoryAlignment.front.camber).value,
     referenceStaticRadius: r,
   };
