@@ -1,14 +1,17 @@
 # E46 Fahrwerk & Radhaus
 
-Eigenständiges Projekt. Entstanden im Finanz-Repo `Assistent`, Ziel ist ein
-eigenes öffentliches Repo mit GitHub Pages. Die Finanz-Regeln gelten hier nicht.
+Öffentliches Repo, veröffentlicht über GitHub Pages:
+<https://maxrtshl-dev.github.io/e46-fahrwerk/>. Entstanden im privaten
+Finanz-Repo `Assistent` und mit Historie hierher umgezogen (2026-11-01).
+**Öffentlich** – keine privaten Daten (Kontostände, Adressen, Kennzeichen,
+FIN) hier ablegen.
 
 - **Quelle der Wahrheit ist `SPEC.md`.** Fahrzeugdaten nur aus
   `public/e46_data.json` – keine Zahl im Code hart verdrahten (Ausnahme:
   physikalische Konstanten und die SPEC-Schwellen in `src/core/thresholds.ts`).
 - `src/core/` ist reines TypeScript ohne three.js/React. Jede Kinematikfunktion
   hat Vitest-Tests mit den Kalibrierwerten aus der JSON.
-- Prüfen: `npm test` und `npm run typecheck` (im Ordner `fahrwerk/`).
+- Prüfen: `npm test` und `npm run typecheck`.
 - Lokal ansehen: `npm run dev`. Bauen: `npm run build` → `dist/`.
 - **Ziel-Hosting: GitHub Pages** aus eigenem Repo, Push auf `main` baut und
   veröffentlicht. Service Worker entsteht beim Build (`vite.config.ts`),
@@ -29,7 +32,7 @@ eigenes öffentliches Repo mit GitHub Pages. Die Finanz-Regeln gelten hier nicht
 | M3 Radhaus-Freigang (`fitment.ts`, HA-Band `rearAxle.ts`, Räder je Achse, Messwerte) | fertig, 43 Tests gesamt |
 | M4 3D-Szene | offen |
 | M5 HA-Ersatzmodell (`twoLink.ts`), Rollachse (`rollAxis.ts`), Daten-Editor mit Überschreibungen, Checkliste, Export/Import | fertig, 55 Tests gesamt |
-| M6 PWA: Manifest, Icons, Service Worker (offline geprüft), Pages-Workflow | fertig – wartet auf eigenes Repo |
+| M6 PWA: Manifest, Icons, Service Worker (offline geprüft), Pages-Workflow | fertig |
 
 ## Modellannahmen M1 (bewusst, dokumentiert)
 
