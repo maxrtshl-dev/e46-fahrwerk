@@ -7,6 +7,7 @@ import { checkFitment, wheelGeometry, worst, type Clearance, type LoadCase, type
 import { checkLegal, overall, type Ampel, type Check } from "../core/legal";
 import { rearGeometryFromData, solveRear, solveRearBand, type Band, type RearResult } from "../core/rearAxle";
 import { lowering, wheelTravel } from "../core/rideHeight";
+import { perchFront, perchRear, type PerchResult } from "../core/coilover";
 import { rollAxis, type RollAxis } from "../core/rollAxis";
 import { HORN_WIDTH_DEFAULT } from "../core/thresholds";
 import { parseTireSize, type TireSize } from "../core/tire";
@@ -61,6 +62,7 @@ export interface Computed {
   legal: Ampel;
   fitFront: AxleFitment;
   fitRear: AxleFitment;
+  perch: { front: PerchResult | null; rear: PerchResult | null };
 }
 
 function axleWheel(w: WheelSetup): AxleWheel {
@@ -224,7 +226,28 @@ export function computeAll(d: E46Data, s: Setup): Computed {
     };
   }
 
-  const checks = checkLegal(d, { heightFront: s.heightFront, heightRear: s.heightRear });
+  // ---- Gewinde: Federteller-Maß für die Zielhöhe (statisch, ohne Federn/Wanken)
+  let pF: PerchResult | null = null;
+  let pR: PerchResult | null = null;
+  try {
+    if (geometry) pF = perchFront(d, geometry, { travel: low, strutTopShiftInward: strutShift, staticRadius: rStatF }, s.heightFront);
+    if (s.heightRear !== null) pR = perchRear(d, rearGeometryFromData(d), lowering(stockRear, s.heightRear), s.heightRear);
+  } catch {
+    /* außerhalb des Modells */
+  }
+  // ungünstigstes Ende des Bands geht in die Gutachtenprüfung
+  const worstEnd = (p: PerchResult | null) => {
+    if (!p?.perch) return undefined;
+    const m = (v: number) => Math.min(v - p.range.min, p.range.max - v);
+    return m(p.perch.min) <= m(p.perch.max) ? p.perch.min : p.perch.max;
+  };
+
+  const checks = checkLegal(d, {
+    heightFront: s.heightFront,
+    heightRear: s.heightRear,
+    perchFront: worstEnd(pF),
+    perchRear: worstEnd(pR),
+  });
   return {
     d,
     kinConfidence,
@@ -245,6 +268,7 @@ export function computeAll(d: E46Data, s: Setup): Computed {
     legal: overall(checks),
     fitFront,
     fitRear,
+    perch: { front: pF, rear: pR },
   };
 }
 

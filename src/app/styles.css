@@ -248,3 +248,13 @@ textarea { width: 100%; font: 13px var(--font-mono); color: var(--ink); backgrou
 .canvas-wrap { position: relative; height: min(62vh, 560px); min-height: 320px; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; touch-action: none; }
 .label3d { font: 600 12px var(--font-mono); color: var(--rc); background: var(--surface); border: 1px solid var(--rc); border-radius: 4px; padding: 1px 6px; white-space: nowrap; pointer-events: none; }
 .canvas-wrap .label3d { position: absolute; left: 0; top: 0; }
+
+/* Gewinde */
+.co-axle { display: grid; gap: 8px; padding-top: 4px; }
+.co-axle + .co-axle { border-top: 1px solid var(--line); padding-top: 12px; }
+.co-list { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; margin: 0; font-size: 0.88rem; }
+.co-list dt { color: var(--muted); }
+.co-list dd { margin: 0; text-align: right; }
+.co-refs { display: flex; gap: 12px; flex-wrap: wrap; }
+.co-ref { display: inline-flex; gap: 6px; align-items: center; font-size: 0.85rem; color: var(--muted); }
+.co-ref input.short { width: 72px; }

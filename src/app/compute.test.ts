@@ -57,4 +57,18 @@ describe("Gesamtrechnung", () => {
     const top = (c: typeof a, axle: "fitFront" | "fitRear") => c[axle].cases[0]!.checks.find((x) => x.id === "oben")!.value!;
     expect(top(b, "fitRear")).toBeLessThan(top(a, "fitRear"));
   });
+
+  it("Gewinde: mit Referenz landet das Federteller-Maß in der Gutachtenprüfung", () => {
+    const g = (v: number) => ({ value: v, unit: "mm" as const, source: "Messung", confidence: "gemessen" as const });
+    const d = applyOverrides(data, {
+      "coilover.refPerchFront": g(215),
+      "coilover.refHeightFront": g(340),
+      "coilover.refPerchRear": g(35),
+      "coilover.refHeightRear": g(330),
+    });
+    const c = computeAll(d, K);
+    expect(c.checks.find((x) => x.id === "tellerVA")!.status).not.toBe("unbekannt");
+    expect(c.checks.find((x) => x.id === "tellerHA")).toBeDefined();
+    expect(computeAll(data, K).checks.find((x) => x.id === "tellerVA")).toBeUndefined();
+  });
 });

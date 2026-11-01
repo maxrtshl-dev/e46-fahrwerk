@@ -123,6 +123,15 @@ export interface E46Data {
     bumpTravelFront: Val;
     bumpTravelRear: Val;
   };
+  coilover: {
+    note: string;
+    refPerchFront: Val;
+    refHeightFront: Val;
+    refPerchRear: Val;
+    refHeightRear: Val;
+    rearSpringOnLinkMin: Val;
+    rearSpringOnLinkMax: Val;
+  };
   measurementsTodo: string[];
 }
 

@@ -121,3 +121,13 @@ FIN) hier ablegen.
   verschieben das Rad (`wheelLateralShift`).
 - Etiketten: eigene HTML-Ebene, per `useFrame` projiziert (drei `<Html>`
   rendert das erste Etikett unter React 19 leer).
+
+## Gewinde-Rechner (2026-11-01)
+
+- `core/coilover.ts`: Federteller-Maß ↔ Höhe. Gleiche Last → gleiche Federlänge,
+  Δh = Δp / i. VA: i = Einfederung Federbein je mm Radhub (aus `frontMcPherson`,
+  ≈ 0,97 → ≈ 1,0 mm Höhe je mm). HA: Feder auf unterem Lenker, Lage
+  `coilover.rearSpringOnLinkMin/Max` (Annahme 0,55–0,7) → ≈ 1,5–1,9 mm je mm.
+- Absolute Maße nur mit Referenz (`coilover.refPerch*`, `refHeight*`, gemessen).
+  Das ungünstigste Bandende geht in `checkLegal` (Federteller-Verstellbereich).
+- Setzen HA (`springSettleRear`) nur als Hinweis: nach 100–200 km neu messen.

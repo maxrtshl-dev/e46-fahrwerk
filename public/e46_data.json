@@ -4,7 +4,7 @@
     "type": "346C",
     "engine": "M52TU B28",
     "coilover": "DTSline (Teilegutachten 14-TAAS-0183/1K)",
-    "version": "2026-11-01f",
+    "version": "2026-11-01g",
     "conventions": "ISO 8855 (x vorn, y links, z oben), mm, Grad dezimal; Sturz negativ = oben innen; Spur positiv = Vorspur; Höhe = Radmitte bis Radlaufkante"
   },
   "limits": {
@@ -513,6 +513,51 @@
         "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
         "confidence": "Annahme"
       }
+    }
+  },
+  "coilover": {
+    "note": "Gewinde DTS: Federteller-Maß wie im Teilegutachten (VA: Federauflage bis Befestigungsschraube Federbein, HA: Federauflage bis Anlagefläche Gewindehülse). Größeres Maß = höher.",
+    "refPerchFront": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Federteller-Maß VA bei der Referenzhöhe – messen"
+    },
+    "refHeightFront": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Höhe VA (Radmitte → Kante) beim Referenzmaß – messen"
+    },
+    "refPerchRear": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Federteller-Maß HA bei der Referenzhöhe – messen"
+    },
+    "refHeightRear": {
+      "value": null,
+      "unit": "mm",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Höhe HA (Radmitte → Kante) beim Referenzmaß – messen"
+    },
+    "rearSpringOnLinkMin": {
+      "value": 0.55,
+      "unit": "-",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Lage der HA-Feder auf dem unteren Lenker, Anteil von innen"
+    },
+    "rearSpringOnLinkMax": {
+      "value": 0.7,
+      "unit": "-",
+      "source": "",
+      "confidence": "Annahme",
+      "note": "Lage der HA-Feder auf dem unteren Lenker, Anteil von innen"
     }
   }
 }

@@ -6,6 +6,7 @@ import { FrontView } from "../ui/FrontView";
 import { RearView, RollAxisView } from "../ui/RearView";
 import { ResultsPanel } from "../ui/ResultsPanel";
 import { MeasurementsPanel, WheelsPanel } from "../ui/Wheels";
+import { CoiloverPanel } from "../ui/Coilover";
 import { useComputed } from "./compute";
 import { data, useData, useSetup } from "./store";
 
@@ -63,6 +64,7 @@ export function App() {
           </div>
           <div className="col-side">
             <Controls />
+            <CoiloverPanel c={c} />
             <WheelsPanel />
             <MeasurementsPanel />
           </div>
