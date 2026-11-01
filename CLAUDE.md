@@ -25,7 +25,7 @@ aus der Wurzel-`CLAUDE.md` gelten hier nicht.
 | M2 2D-Frontansicht VA (SVG, ganze Achse mit Wanken, `frontAxle.ts`, `format.ts`) | fertig, 33 Tests gesamt |
 | M3 Radhaus-Freigang (`fitment.ts`, HA-Band `rearAxle.ts`, Räder je Achse, Messwerte) | fertig, 43 Tests gesamt |
 | M4 3D-Szene | offen |
-| M5 HA-Ersatzmodell, DataEditor | offen |
+| M5 HA-Ersatzmodell (`twoLink.ts`), Rollachse (`rollAxis.ts`), Daten-Editor mit Überschreibungen, Checkliste, Export/Import | fertig, 55 Tests gesamt |
 | M6 PWA | offen |
 
 ## Modellannahmen M1 (bewusst, dokumentiert)
@@ -61,3 +61,18 @@ aus der Wurzel-`CLAUDE.md` gelten hier nicht.
 - HA: Sturz als Band aus den Annahmen; außen zählt der ungünstigste Wert.
 - Messwerte (`fitment.*` in der JSON) sind leer; die App speichert eigene
   Eingaben nur im Browser. Messwerte gehören in die JSON, sobald sie da sind.
+
+## Annahmen M5
+
+- HA: ebener Doppellenker als Ersatz der Mehrlenkerachse, Punkte in
+  `rearEquivalent` (Annahme). Kalibriert auf die Bandmitte: RZ 110 mm,
+  Gradient ≈ 1,27, Sturzzunahme ≈ 0,022 °/mm. Die Annahmebänder werden
+  daneben weiter angezeigt.
+- **Widerspruch, offen:** Die SPEC sagt, der HA-Sturz komme nach dem
+  Tieferlegen kaum unter ≈ −2°. Das Annahmeband liefert bei 45 mm tiefer
+  −2°11′…−2°51′. Ein Vermessungsprotokoll bei bekannter Höhe klärt das; dann
+  `calibration.camberGainRear*` anpassen und `rearEquivalent` neu kalibrieren.
+- Rollachse statisch (nur Höhen), Radstand 2725 mm.
+- Eigene Werte: Überschreibungen je JSON-Pfad (`store.overrides`), nur im
+  Browser. „Kopieren“ liefert JSON `{pfad: Val}` – das kommt per Chat zu Claude
+  und wird mit Quelle in `public/e46_data.json` eingetragen.

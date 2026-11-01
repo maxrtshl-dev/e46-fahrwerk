@@ -4,7 +4,7 @@
     "type": "346C",
     "engine": "M52TU B28",
     "coilover": "DTSline (Teilegutachten 14-TAAS-0183/1K)",
-    "version": "2026-11-01b",
+    "version": "2026-11-01c",
     "conventions": "ISO 8855 (x vorn, y links, z oben), mm, Grad dezimal; Sturz negativ = oben innen; Spur positiv = Vorspur; Höhe = Radmitte bis Radlaufkante"
   },
   "limits": {
@@ -114,6 +114,12 @@
       "source": "BMW-Syndikat, E46 mit KW-Gewinde",
       "confidence": "geschätzt",
       "note": "bis ca."
+    },
+    "wheelbase": {
+      "value": 2725,
+      "unit": "mm",
+      "source": "BMW Technische Daten E46 Coupé",
+      "confidence": "belegt"
     }
   },
   "frontHardpoints": {
@@ -346,6 +352,65 @@
       "source": "",
       "confidence": "Annahme",
       "note": "freier Weg bis Anschlagpuffer – Kabelbinder am Dämpferrohr"
+    }
+  },
+  "rearEquivalent": {
+    "note": "2D-Doppellenker in der Frontansicht als Ersatz für die Mehrlenkerachse (SPEC 7.4 v1). Keine realen Lenkerpunkte – ersetzt sie durch Messungen, sobald vorhanden.",
+    "lowerInner": {
+      "y": {
+        "value": 320,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      },
+      "z": {
+        "value": 180,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      }
+    },
+    "lowerOuter": {
+      "y": {
+        "value": 690,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      },
+      "z": {
+        "value": 140,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      }
+    },
+    "upperInner": {
+      "y": {
+        "value": 440,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      },
+      "z": {
+        "value": 444,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      }
+    },
+    "upperOuter": {
+      "y": {
+        "value": 640,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      },
+      "z": {
+        "value": 440,
+        "unit": "mm",
+        "source": "Ersatzmodell, kalibriert auf Mitte der Annahmebänder (calibration.*)",
+        "confidence": "Annahme"
+      }
     }
   }
 }

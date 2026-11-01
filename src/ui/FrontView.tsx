@@ -1,11 +1,9 @@
 import type { AxleResult, SideResult } from "../core/frontAxle";
 import type { Vec2 } from "../core/frontMcPherson";
 import { fmtMm } from "../core/format";
-import { req } from "../core/data";
 import type { TireSize } from "../core/tire";
 import { MM_PER_INCH, tireRadius } from "../core/tire";
-import { data } from "../app/store";
-import { kinConfidence, stockAxle } from "../app/compute";
+import type { Computed } from "../app/compute";
 
 // Darstellung: Blick von vorn. Fahrzeug links (+y) erscheint rechts im Bild.
 // SVG-Koordinaten: x = y, Y = −z (mm).
@@ -13,7 +11,6 @@ const X = (p: Vec2) => p.y;
 const Y = (p: Vec2) => -p.z;
 const RAY = 2600; // Polstrahlen so weit verlängern, dass sie den Bildrand verlassen
 
-const stockH = req(data.vehicle.stockHeightFront);
 
 function ext(from: Vec2, to: Vec2 | null, dirIfNull: Vec2, len = RAY): Vec2 {
   const d = to ? { y: to.y - from.y, z: to.z - from.z } : dirIfNull;
@@ -70,7 +67,10 @@ function PoleLines({ s }: { s: SideResult }) {
   );
 }
 
-export function FrontView({ axle, tire, heightFront }: { axle: AxleResult | null; tire: TireSize | null; heightFront: number }) {
+export function FrontView({ c, heightFront }: { c: Computed; heightFront: number }) {
+  const { axle, tire, stockAxle, kinConfidence } = c;
+  if (!stockAxle) return <figure className="view"><p className="error">{c.error}</p></figure>;
+  const stockH = c.d.vehicle.stockHeightFront.value ?? 0;
   // Karosseriesystem → Fahrbahnsystem: Fahrbahn waagerecht auf Y = 0
   let transform = "";
   if (axle) {

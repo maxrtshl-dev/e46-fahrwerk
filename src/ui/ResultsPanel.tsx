@@ -1,8 +1,6 @@
-import type { Confidence, Val } from "../core/data";
 import { fmtDeg, fmtDegDec, fmtMm } from "../core/format";
 import type { Ampel } from "../core/legal";
-import { data } from "../app/store";
-import { kinConfidence, stockAxle, type Computed } from "../app/compute";
+import type { Computed } from "../app/compute";
 
 const AMPEL_TEXT: Record<Ampel, string> = {
   gruen: "im Rahmen",
@@ -15,10 +13,6 @@ function Dot({ status }: { status: Ampel }) {
   return <span className={`dot dot-${status}`} aria-label={AMPEL_TEXT[status]} />;
 }
 
-function Conf({ c }: { c: Confidence }) {
-  return <span className={`conf conf-${c === "geschätzt" ? "geschaetzt" : c}`}>{c}</span>;
-}
-
 /** Band „a … b“; gleiche Enden werden zu einem Wert. */
 function band(b: { min: number; max: number }, f: (v: number) => string): string {
   const a = f(b.min);
@@ -26,14 +20,16 @@ function band(b: { min: number; max: number }, f: (v: number) => string): string
   return a === z ? a : `${a} … ${z.replace("≈ ", "")}`;
 }
 
-const heightConf = data.vehicle.stockHeightFront.confidence;
-const factory = data.factoryAlignment.front;
 
 export function ResultsPanel({ c, roll }: { c: Computed; roll: number }) {
   const a = c.axle;
   const st = c.staticAxle;
-  const k = kinConfidence;
-  const rcStock = stockAxle.rollCenterHeight;
+  const k = c.kinConfidence;
+  const kr = c.rearConfidence;
+  const rcStock = c.stockAxle?.rollCenterHeight ?? null;
+  const heightConf = c.d.vehicle.stockHeightFront.confidence;
+  const factory = c.d.factoryAlignment.front;
+  const r = c.rear;
 
   return (
     <section className="panel results" aria-label="Ergebnisse">
@@ -116,36 +112,52 @@ export function ResultsPanel({ c, roll }: { c: Computed; roll: number }) {
         </div>
       )}
 
-      {c.rear ? (
+      {r ? (
         <div className="table-wrap">
           <table>
             <thead>
               <tr>
-                <th scope="col">Hinterachse · Band aus Annahmen</th>
+                <th scope="col">Hinterachse · Ersatzmodell</th>
                 <th scope="col" className="num">statisch</th>
                 <th scope="col" className="num">Lastfall außen</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <th scope="row">Tieferlegung</th>
-                <td className="num" colSpan={2}>{fmtMm(c.rear.lowering, heightConf)}</td>
+                <th scope="row">Tieferlegung / Radhub</th>
+                <td className="num">{fmtMm(r.lowering, heightConf, true)}</td>
+                <td className="num">{fmtMm(r.travelOuter, heightConf, true)}</td>
               </tr>
               <tr>
                 <th scope="row">Sturz zur Karosserie</th>
-                <td className="num">{band(c.rear.static.camberDeg, (v) => fmtDeg(v, "geschätzt"))}</td>
-                <td className="num">{band(c.rear.load.camberDeg, (v) => fmtDeg(v, "geschätzt"))}</td>
+                <td className="num">{fmtDeg(r.static.camberBodyDeg, kr)}</td>
+                <td className="num">{fmtDeg(r.load.camberBodyDeg, kr)}</td>
+              </tr>
+              <tr className="band-row">
+                <th scope="row">Band der Annahmen</th>
+                <td className="num">{band(r.bandStatic.camberDeg, (v) => fmtDeg(v + c.camberOffsetRear, kr))}</td>
+                <td className="num">{band(r.bandLoad.camberDeg, (v) => fmtDeg(v + c.camberOffsetRear, kr))}</td>
               </tr>
               <tr>
                 <th scope="row">Rollzentrum Höhe</th>
-                <td className="num">{band(c.rear.static.rollCenterHeight, (v) => fmtMm(v, "geschätzt", true))}</td>
-                <td className="num">{band(c.rear.load.rollCenterHeight, (v) => fmtMm(v, "geschätzt", true))}</td>
+                <td className="num">{fmtMm(r.static.rollCenterHeight, kr, true)}</td>
+                <td className="num">{fmtMm(r.load.rollCenterHeight, kr, true)}</td>
+              </tr>
+              <tr className="band-row">
+                <th scope="row">Band der Annahmen</th>
+                <td className="num">{band(r.bandStatic.rollCenterHeight, (v) => fmtMm(v, kr, true))}</td>
+                <td className="num">{band(r.bandLoad.rollCenterHeight, (v) => fmtMm(v, kr, true))}</td>
+              </tr>
+              <tr>
+                <th scope="row">Spurweite</th>
+                <td className="num">{fmtMm(2 * r.static.halfTrackChange, kr, true)}</td>
+                <td className="num">–</td>
               </tr>
             </tbody>
           </table>
         </div>
       ) : (
-        <p className="hint">Hinterachse: Höhe HA eintragen, dann erscheinen Sturz- und Rollzentrum-Band.</p>
+        <p className="hint">{c.rearError ?? "Hinterachse: Höhe HA eintragen, dann rechnet das Ersatzmodell."}</p>
       )}
 
       <h3>Gutachten DTS</h3>
@@ -157,46 +169,6 @@ export function ResultsPanel({ c, roll }: { c: Computed; roll: number }) {
           </li>
         ))}
       </ul>
-    </section>
-  );
-}
-
-const INPUTS: [string, Val][] = [
-  ["Querlenker innen y", data.frontHardpoints.lowerArmInner.y],
-  ["Querlenker innen z", data.frontHardpoints.lowerArmInner.z],
-  ["Traggelenk y", data.frontHardpoints.lowerArmOuter.y],
-  ["Traggelenk z", data.frontHardpoints.lowerArmOuter.z],
-  ["Domlager y", data.frontHardpoints.strutTop.y],
-  ["Domlager z", data.frontHardpoints.strutTop.z],
-  ["Spurweite VA", data.vehicle.trackFront],
-  ["Serienhöhe VA", data.vehicle.stockHeightFront],
-  ["Mindesthöhe VA", data.limits.minHeightFront],
-  ["Mindesthöhe HA", data.limits.minHeightRear],
-];
-
-export function InputsPanel() {
-  return (
-    <section className="panel inputs" aria-label="Eingangsdaten">
-      <h2>Eingangsdaten</h2>
-      <p className="hint">
-        Das Ergebnis ist so belastbar wie der schwächste Wert. Messwerte eintragen folgt mit dem Daten-Editor (M5).
-      </p>
-      <div className="table-wrap">
-        <table>
-          <tbody>
-            {INPUTS.map(([label, v]) => (
-              <tr key={label}>
-                <th scope="row">{label}</th>
-                <td className="num">{v.value ?? "–"} {v.unit}</td>
-                <td>
-                  <Conf c={v.confidence} />
-                </td>
-                <td className="src">{v.source}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
     </section>
   );
 }

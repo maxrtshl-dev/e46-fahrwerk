@@ -4,7 +4,8 @@ import type { Ampel } from "../core/legal";
 import { MM_PER_INCH } from "../core/tire";
 import { formatDegMin } from "../core/units";
 import type { AxleFitment, Computed } from "../app/compute";
-import { measure, useSetup, type WheelSetup } from "../app/store";
+import { useSetup, type WheelSetup } from "../app/store";
+import type { E46Data } from "../core/data";
 
 const AMPEL: Record<Ampel, string> = { gruen: "frei", gelb: "knapp", rot: "Kollision/kritisch", unbekannt: "offen" };
 
@@ -108,8 +109,8 @@ function Section({
   );
 }
 
-function AxleCard({ f, w }: { f: AxleFitment; w: WheelSetup }) {
-  const s = useSetup();
+function AxleCard({ f, w, d }: { f: AxleFitment; w: WheelSetup; d: E46Data }) {
+  const m = d.fitment;
   const isVA = f.axle === "VA";
   const last = f.cases[f.cases.length - 1];
   const rows = f.cases[0]?.checks ?? [];
@@ -130,9 +131,9 @@ function AxleCard({ f, w }: { f: AxleFitment; w: WheelSetup }) {
           geo={f.wheel.geo}
           rimInch={f.wheel.tire.rimInch}
           load={last.load}
-          fenderLateral={measure(s, isVA ? "fenderLateralFront" : "fenderLateralRear")}
-          innerA={measure(s, isVA ? "innerStrutFront" : "innerRear")}
-          innerB={isVA ? measure(s, "innerPerchFront") : null}
+          fenderLateral={isVA ? m.fenderLateralFront.value : m.fenderLateralRear.value}
+          innerA={isVA ? m.innerStrutFront.value : m.innerRear.value}
+          innerB={isVA ? m.innerPerchFront.value : null}
           top={last.checks.find((c) => c.id === "oben")}
         />
       )}
@@ -190,8 +191,8 @@ export function FitmentPanel({ c }: { c: Computed }) {
         Radlaufkante als Kreis um die Radmitte in Serienlage (v1) · grün &gt; 10 mm · gelb 3–10 mm · rot &lt; 3 mm · Lenkeinschlag folgt
       </p>
       <div className="fit-grid">
-        <AxleCard f={c.fitFront} w={wheels.front} />
-        <AxleCard f={c.fitRear} w={wheels.rear} />
+        <AxleCard f={c.fitFront} w={wheels.front} d={c.d} />
+        <AxleCard f={c.fitRear} w={wheels.rear} d={c.d} />
       </div>
     </section>
   );

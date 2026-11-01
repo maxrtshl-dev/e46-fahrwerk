@@ -190,3 +190,50 @@ fieldset.wheel legend { padding: 0 4px; font-weight: 600; font-size: 0.9rem; }
 .section .label.small { font-size: 16px; }
 .notes { margin: 0; padding-left: 18px; font-size: 0.8rem; color: var(--muted); display: grid; gap: 3px; }
 .notes strong { color: var(--ink); font-weight: 500; }
+
+/* Tabs */
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tab { padding: 8px 14px; color: var(--muted); text-decoration: none; font-weight: 500; border-bottom: 3px solid transparent; margin-bottom: -1px; }
+.tab:hover { color: var(--ink); }
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Seitenansicht, HA */
+.wheel-side { fill: none; stroke: var(--ghost); stroke-width: 6; }
+.axis { stroke: var(--rc); stroke-width: 8; }
+.axis-ghost { stroke: var(--ghost); stroke-width: 5; stroke-dasharray: 24 14; }
+.label.big { font-size: 64px; }
+.band-row th, .band-row td { color: var(--muted); font-size: 0.8rem; border-bottom-style: dashed; }
+
+/* Daten-Editor */
+.data-page { display: grid; gap: 16px; }
+.data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 760px) { .data-grid { grid-template-columns: minmax(0, 1fr); } }
+.summary { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+.summary-item { display: inline-flex; gap: 6px; align-items: center; }
+table.editor td.edit { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+table.editor td.edit input.short { width: 96px; }
+table.editor tr.own th, table.editor tr.own td { background: color-mix(in srgb, var(--ok) 7%, transparent); }
+select { font: inherit; font-size: 0.85rem; color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 5px 6px; }
+.link { font: inherit; font-size: 0.82rem; color: var(--accent); background: none; border: 0; padding: 0; cursor: pointer; text-decoration: underline; }
+.todo { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 0.9rem; }
+.todo label { display: flex; gap: 8px; align-items: baseline; cursor: pointer; }
+.io { display: grid; gap: 8px; }
+.io-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn { font: inherit; font-size: 0.9rem; font-weight: 500; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent); color: var(--surface); cursor: pointer; }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.btn-ghost { background: transparent; color: var(--accent); }
+textarea { width: 100%; font: 13px var(--font-mono); color: var(--ink); background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.axle-mark { stroke: var(--ghost); stroke-width: 6; stroke-dasharray: 20 12; }
+.label.muted { fill: var(--muted); }
+
+/* Daten-Editor auf schmalen Bildschirmen: jede Zeile als Karte */
+@media (max-width: 600px) {
+  table.editor thead { display: none; }
+  table.editor tr { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 10px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  table.editor th, table.editor td { border: 0; padding: 0; }
+  table.editor td.num { text-align: left; }
+  table.editor td.num::before { content: attr(data-k) " "; color: var(--muted); font-family: var(--font-body); font-size: 0.8rem; }
+  table.editor td.edit { grid-column: 1 / -1; }
+  table.editor td.src { grid-column: 1 / -1; }
+}

@@ -1,22 +1,14 @@
+import { useMemo } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import raw from "../../public/e46_data.json";
-import type { E46Data, Preset } from "../core/data";
-import { req } from "../core/data";
+import type { E46Data, Overrides, Preset, Val } from "../core/data";
+import { applyOverrides, req } from "../core/data";
 
-export const data = raw as unknown as E46Data;
-
-export interface Setup {
-  preset: string | null;
-  heightFront: number;
-  heightRear: number | null;
-  bump: number; // mm, + = einfedern
-  roll: number; // Grad, + = Karosserie neigt nach rechts
-  camberCorrDeg: number; // Domversatz als Sturzkorrektur, Grad (≥ 0)
-  wheels: { front: WheelSetup; rear: WheelSetup };
-  /** Eigene Messwerte Radhaus (mm), Schlüssel aus data.fitment. */
-  measured: Partial<Record<MeasureKey, number | null>>;
-}
+/** Daten aus dem Repo, unverändert. */
+export const baseData = raw as unknown as E46Data;
+/** Kurzname für Stellen, die nur Repo-Werte brauchen (Texte, Presets). */
+export const data = baseData;
 
 export interface WheelSetup {
   widthJ: number;
@@ -26,23 +18,34 @@ export interface WheelSetup {
   staticRadius: number;
 }
 
-export type MeasureKey = Exclude<keyof E46Data["fitment"], "note">;
-
-/** Messwert: eigene Eingabe vor Datenwert. */
-export function measure(s: Setup, k: MeasureKey): number | null {
-  const own = s.measured[k];
-  if (own !== undefined && own !== null) return own;
-  return data.fitment[k].value;
+export interface Setup {
+  preset: string | null;
+  heightFront: number;
+  heightRear: number | null;
+  bump: number; // mm, + = einfedern
+  roll: number; // Grad, + = Karosserie neigt nach rechts
+  camberCorrDeg: number; // Domversatz VA als Sturzkorrektur, Grad (≥ 0)
+  camberOffsetRearDeg: number; // Exzenter HA, Grad (− = negativer)
+  wheels: { front: WheelSetup; rear: WheelSetup };
+  /** Eigene Werte je Pfad in e46_data.json – Messungen haben Vorrang. */
+  overrides: Overrides;
+  /** Checkliste Messungen: Index in measurementsTodo → erledigt. */
+  todoDone: Record<number, boolean>;
 }
+
+export type MeasureKey = Exclude<keyof E46Data["fitment"], "note">;
 
 interface Store extends Setup {
   set: (p: Partial<Setup>) => void;
   setWheel: (axle: "front" | "rear", p: Partial<WheelSetup>) => void;
-  setMeasured: (k: MeasureKey, v: number | null) => void;
+  setOverride: (path: string, v: Val | null) => void;
+  replaceOverrides: (o: Overrides) => void;
+  toggleTodo: (i: number) => void;
   applyPreset: (p: Preset) => void;
 }
 
-const stockFront = req(data.vehicle.stockHeightFront);
+const stockFront = req(baseData.vehicle.stockHeightFront);
+
 const toSetup = (w: E46Data["wheels"]["current"]["front"]): WheelSetup => ({
   widthJ: w.widthJ ?? 8,
   et: w.et ?? 40,
@@ -54,13 +57,21 @@ const toSetup = (w: E46Data["wheels"]["current"]["front"]): WheelSetup => ({
 export const initialSetup: Setup = {
   preset: "Serie",
   heightFront: stockFront,
-  heightRear: data.vehicle.stockHeightRear.value,
+  heightRear: baseData.vehicle.stockHeightRear.value,
   bump: 0,
   roll: 0,
   camberCorrDeg: 0,
-  wheels: { front: toSetup(data.wheels.current.front), rear: toSetup(data.wheels.current.rear) },
-  measured: {},
+  camberOffsetRearDeg: 0,
+  wheels: { front: toSetup(baseData.wheels.current.front), rear: toSetup(baseData.wheels.current.rear) },
+  overrides: {},
+  todoDone: {},
 };
+
+/** Neue eigene Messung für einen Pfad. */
+export function measuredVal(base: Val, value: number): Val {
+  const today = new Date().toISOString().slice(0, 10);
+  return { value, unit: base.unit, source: `Messung Max ${today}`, confidence: "gemessen", note: base.note };
+}
 
 // localStorage kann im Artifact-Rahmen fehlen oder werfen – dann eben ohne.
 const safeStorage = createJSONStorage(() => {
@@ -84,7 +95,15 @@ export const useSetup = create<Store>()(
       ...initialSetup,
       set: (p) => set({ ...p, preset: "preset" in p ? (p.preset ?? null) : null }),
       setWheel: (axle, p) => set((st) => ({ wheels: { ...st.wheels, [axle]: { ...st.wheels[axle], ...p } } })),
-      setMeasured: (k, v) => set((st) => ({ measured: { ...st.measured, [k]: v } })),
+      setOverride: (path, v) =>
+        set((st) => {
+          const next = { ...st.overrides };
+          if (v === null) delete next[path];
+          else next[path] = v;
+          return { overrides: next };
+        }),
+      replaceOverrides: (o) => set({ overrides: o }),
+      toggleTodo: (i) => set((st) => ({ todoDone: { ...st.todoDone, [i]: !st.todoDone[i] } })),
       applyPreset: (p) =>
         set({
           preset: p.name,
@@ -97,9 +116,40 @@ export const useSetup = create<Store>()(
     {
       name: "e46-fahrwerk-setup",
       storage: safeStorage,
-      version: 2,
-      // v1 kannte nur einen Reifen für beide Achsen: Räder neu aus den Daten
-      migrate: (old) => ({ ...initialSetup, ...(old as object), wheels: initialSetup.wheels, measured: {} }) as Store,
+      version: 3,
+      migrate: (old, version) => {
+        const o = (old ?? {}) as Partial<Setup> & { measured?: Record<string, number | null> };
+        const overrides: Overrides = {};
+        // v2: Radhaus-Messwerte → Überschreibungen
+        for (const [k, v] of Object.entries(o.measured ?? {})) {
+          const base = baseData.fitment[k as MeasureKey];
+          if (base && typeof v === "number") overrides[`fitment.${k}`] = measuredVal(base, v);
+        }
+        return {
+          ...initialSetup,
+          ...o,
+          wheels: version < 2 ? initialSetup.wheels : (o.wheels ?? initialSetup.wheels),
+          overrides: { ...overrides, ...(o.overrides ?? {}) },
+          todoDone: o.todoDone ?? {},
+        } as Store;
+      },
     },
   ),
 );
+
+/** Repo-Daten mit eigenen Werten. Ungültige Pfade werden übergangen. */
+export function useData(): E46Data {
+  const overrides = useSetup((s) => s.overrides);
+  return useMemo(() => {
+    const valid: Overrides = {};
+    for (const [p, v] of Object.entries(overrides)) {
+      try {
+        applyOverrides(baseData, { [p]: v });
+        valid[p] = v;
+      } catch {
+        /* Pfad gibt es in dieser Datenversion nicht mehr */
+      }
+    }
+    return applyOverrides(baseData, valid);
+  }, [overrides]);
+}

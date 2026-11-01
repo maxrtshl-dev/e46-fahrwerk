@@ -1,6 +1,7 @@
 import { defaultStaticRadius, parseTireSize, tireRadius } from "../core/tire";
 import { TIRE_DEFLECTION_DEFAULT } from "../core/thresholds";
-import { data, useSetup, type MeasureKey } from "../app/store";
+import { data, measuredVal, useData, useSetup, type MeasureKey } from "../app/store";
+import { Conf } from "./Conf";
 import { NumField } from "./NumField";
 
 function WheelFields({ axle, label }: { axle: "front" | "rear"; label: string }) {
@@ -80,8 +81,8 @@ const FIELDS: [MeasureKey, string][] = [
 ];
 
 export function MeasurementsPanel() {
-  const measured = useSetup((s) => s.measured);
-  const setMeasured = useSetup((s) => s.setMeasured);
+  const d = useData();
+  const setOverride = useSetup((s) => s.setOverride);
   return (
     <section className="panel" aria-label="Messwerte Radhaus">
       <h2>Messwerte Radhaus</h2>
@@ -89,15 +90,17 @@ export function MeasurementsPanel() {
       <div className="measures">
         {FIELDS.map(([k, label]) => (
           <div key={k} className="measure">
-            <label htmlFor={`m-${k}`}>{label}</label>
+            <label htmlFor={`m-${k}`}>
+              {label} <Conf c={d.fitment[k].confidence} />
+            </label>
             <div className="inline">
               <NumField
                 id={`m-${k}`}
                 className="short"
-                value={measured[k] ?? data.fitment[k].value}
+                value={d.fitment[k].value}
                 allowEmpty
                 placeholder="–"
-                onChange={(v) => setMeasured(k, v)}
+                onChange={(v) => setOverride(`fitment.${k}`, v === null ? null : measuredVal(data.fitment[k], v))}
               />
               <span className="unit">mm</span>
             </div>

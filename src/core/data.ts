@@ -52,6 +52,14 @@ export interface E46Data {
     currentHeightRear: Val;
     springRateFront: Val;
     springSettleRear: Val;
+    wheelbase: Val;
+  };
+  rearEquivalent: {
+    note: string;
+    lowerInner: PointVal;
+    lowerOuter: PointVal;
+    upperInner: PointVal;
+    upperOuter: PointVal;
   };
   frontHardpoints: {
     note: string;

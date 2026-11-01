@@ -1,8 +1,9 @@
 // Hinterachse, Bandmodell (SPEC 7.4) – gilt bis zum Ersatzmodell mit Lenkerpunkten (M5).
 // Alle Kalibrierwerte der HA sind Annahmen, deshalb ist jedes Ergebnis ein Band.
 
-import type { E46Data } from "./data";
+import type { E46Data, PointVal } from "./data";
 import { req } from "./data";
+import { solveTwoLink, type TwoLinkGeometry, type TwoLinkResult } from "./twoLink";
 import { parseDegMin } from "./units";
 
 export interface Band {
@@ -33,4 +34,29 @@ export function solveRearBand(data: E46Data, travel: number): RearResult {
     camberDeg: { min: Math.min(...cam), max: Math.max(...cam) },
     rollCenterHeight: { min: Math.min(...rc), max: Math.max(...rc) },
   };
+}
+
+// ---- Ersatzmodell (Doppellenker in der Frontansicht)
+
+export function rearGeometryFromData(data: E46Data): TwoLinkGeometry {
+  const e = data.rearEquivalent;
+  const p = (v: PointVal, n: string) => ({ y: req(v.y, `${n} y`), z: req(v.z, `${n} z`) });
+  const r = data.wheels.current.rear.staticRadius;
+  return {
+    lowerInner: p(e.lowerInner, "HA unten innen"),
+    lowerOuter: p(e.lowerOuter, "HA unten außen"),
+    upperInner: p(e.upperInner, "HA oben innen"),
+    upperOuter: p(e.upperOuter, "HA oben außen"),
+    wheelCenter: { y: req(data.vehicle.trackRear, "Spurweite HA") / 2, z: r },
+    stockCamberDeg: parseDegMin(data.factoryAlignment.rear.camber).value,
+    referenceStaticRadius: r,
+  };
+}
+
+export function solveRear(
+  g: TwoLinkGeometry,
+  travel: number,
+  opts: { camberOffsetDeg?: number; staticRadius?: number } = {},
+): TwoLinkResult {
+  return solveTwoLink(g, { travel, ...opts });
 }

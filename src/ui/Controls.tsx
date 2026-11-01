@@ -151,6 +151,19 @@ export function Controls() {
         hint={`Domlager nach innen gedrückt, max. ≈ ${String(maxCorr).replace(".", ",")}° über die Langlöcher`}
       />
 
+      <Slider
+        id="exzHA"
+        label="Exzenter HA"
+        value={s.camberOffsetRearDeg}
+        min={-1}
+        max={1}
+        step={0.05}
+        unit="°"
+        display={s.camberOffsetRearDeg === 0 ? "Serie" : formatDegMin(s.camberOffsetRearDeg)}
+        stock={0}
+        onChange={(v) => set({ camberOffsetRearDeg: v })}
+        hint="Sturzverstellung HA, − = mehr negativer Sturz"
+      />
     </section>
   );
 }
