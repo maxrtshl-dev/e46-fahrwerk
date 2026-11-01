@@ -1,0 +1,313 @@
+import { useMemo } from "react";
+import * as THREE from "three";
+import { Line } from "@react-three/drei";
+import type { Computed } from "../app/compute";
+import type { Setup } from "../app/store";
+import type { SideResult } from "../core/frontAxle";
+import { fmtMm } from "../core/format";
+import type { TwoLinkResult } from "../core/twoLink";
+import { MM_PER_INCH, tireRadius, wheelLateralShift, rimWidthMm, type TireSize } from "../core/tire";
+import { archEdge, between, bodyProfile, bodyToRoad, cabinProfile, Helix, v3, VIS } from "./geometry";
+
+const DEG = Math.PI / 180;
+
+export interface Palette {
+  body: string;
+  tire: string;
+  rim: string;
+  arm: string;
+  spring: string;
+  rc: string;
+  edge: string;
+}
+
+interface Look {
+  palette: Palette;
+  opacity: number; // 1 = voll, < 1 = Vergleichssetup
+  showBody: boolean;
+  labels: boolean;
+}
+
+function Mat({ color, opacity, metal = 0.1 }: { color: string; opacity: number; metal?: number }) {
+  return (
+    <meshStandardMaterial
+      color={color}
+      metalness={metal}
+      roughness={0.55}
+      transparent={opacity < 1}
+      opacity={opacity}
+      depthWrite={opacity >= 1}
+    />
+  );
+}
+
+function Rod({ a, b, r, color, opacity }: { a: THREE.Vector3; b: THREE.Vector3; r: number; color: string; opacity: number }) {
+  const t = useMemo(() => between(a, b), [a, b]);
+  return (
+    <mesh position={t.position} quaternion={t.quaternion}>
+      <cylinderGeometry args={[r, r, t.length, 14]} />
+      <Mat color={color} opacity={opacity} />
+    </mesh>
+  );
+}
+
+function Joint({ p, r, color, opacity }: { p: THREE.Vector3; r: number; color: string; opacity: number }) {
+  return (
+    <mesh position={p}>
+      <sphereGeometry args={[r, 16, 12]} />
+      <Mat color={color} opacity={opacity} metal={0.4} />
+    </mesh>
+  );
+}
+
+/** Rad: Reifen (Rotationskörper), Felgenbett, Radstern an der Radanlagefläche. Achse = y. */
+function Wheel({
+  center,
+  camberDeg,
+  side,
+  tire,
+  widthJ,
+  et,
+  look,
+}: {
+  center: THREE.Vector3;
+  camberDeg: number;
+  side: 1 | -1; // 1 = links (+y)
+  tire: TireSize;
+  widthJ: number;
+  et: number;
+  look: Look;
+}) {
+  const r = tireRadius(tire);
+  const rimR = (tire.rimInch * MM_PER_INCH) / 2;
+  const b = rimWidthMm(widthJ);
+  const lathe = useMemo(() => {
+    const w = tire.widthMm;
+    const pts = [
+      new THREE.Vector2(rimR, -b / 2),
+      new THREE.Vector2(rimR + (r - rimR) * 0.35, -w / 2),
+      new THREE.Vector2(r - 18, -w / 2 + 4),
+      new THREE.Vector2(r, -w / 2 + 38),
+      new THREE.Vector2(r, w / 2 - 38),
+      new THREE.Vector2(r - 18, w / 2 - 4),
+      new THREE.Vector2(rimR + (r - rimR) * 0.35, w / 2),
+      new THREE.Vector2(rimR, b / 2),
+    ];
+    return new THREE.LatheGeometry(pts, 56);
+  }, [r, rimR, b, tire.widthMm]);
+  const { palette, opacity } = look;
+  // links: Sturz negativ → oben nach innen (−y) = positive Drehung um x; rechts gespiegelt
+  const rotX = side === 1 ? -camberDeg * DEG : camberDeg * DEG;
+  const spokes = 10;
+  return (
+    <group position={center} rotation={[rotX, 0, side === 1 ? 0 : Math.PI]}>
+      <mesh geometry={lathe}>
+        <meshStandardMaterial
+          color={palette.tire}
+          roughness={0.9}
+          side={THREE.DoubleSide}
+          transparent={opacity < 1}
+          opacity={opacity}
+          depthWrite={opacity >= 1}
+        />
+      </mesh>
+      <mesh>
+        <cylinderGeometry args={[rimR - 8, rimR - 8, b, 48, 1, true]} />
+        <meshStandardMaterial color={palette.rim} metalness={0.6} roughness={0.35} side={THREE.DoubleSide} transparent={opacity < 1} opacity={opacity} />
+      </mesh>
+      {/* Radstern: Nabe an der Radanlagefläche (ET nach außen), Speichen bis zum äußeren Felgenhorn */}
+      <mesh position={[0, et, 0]}>
+        <cylinderGeometry args={[70, 70, 26, 24]} />
+        <Mat color={palette.rim} opacity={opacity} metal={0.6} />
+      </mesh>
+      {Array.from({ length: spokes }, (_, i) => {
+        const a = (i / spokes) * Math.PI * 2 + (i % 2 ? 0.09 : -0.09);
+        const inner = v3(70 * Math.cos(a), et, 70 * Math.sin(a));
+        const outer = v3((rimR - 14) * Math.cos(a), b / 2 - 6, (rimR - 14) * Math.sin(a));
+        return <Rod key={i} a={inner} b={outer} r={11} color={palette.rim} opacity={opacity} />;
+      })}
+    </group>
+  );
+}
+
+function FrontCorner({ s, look }: { s: SideResult; look: Look }) {
+  const p = (q: { y: number; z: number }) => v3(0, q.y, q.z);
+  const A = p(s.lowerArmInner);
+  const B = p(s.lowerArmOuter);
+  const T = p(s.strutTop);
+  const { palette: c, opacity } = look;
+  // Feder auf dem oberen Drittel des Federbeins
+  const springBase = B.clone().lerp(T, 0.45);
+  const spring = between(springBase, T);
+  const helix = useMemo(() => new THREE.TubeGeometry(new Helix(62, spring.length, 6.5), 260, 6, 8, false), [spring.length]);
+  return (
+    <group>
+      <Rod a={A} b={B} r={14} color={c.arm} opacity={opacity} />
+      <Rod a={B} b={T} r={24} color={c.arm} opacity={opacity} />
+      <Joint p={A} r={22} color={c.arm} opacity={opacity} />
+      <Joint p={B} r={22} color={c.arm} opacity={opacity} />
+      <mesh position={T} rotation={[Math.PI / 2, 0, 0]}>
+        <cylinderGeometry args={[70, 70, 22, 24]} />
+        <Mat color={c.arm} opacity={opacity} metal={0.4} />
+      </mesh>
+      <group position={springBase} quaternion={spring.quaternion}>
+        <mesh geometry={helix}>
+          <Mat color={c.spring} opacity={opacity} metal={0.3} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+function RearCorner({ r, x, mirror, look }: { r: TwoLinkResult; x: number; mirror: boolean; look: Look }) {
+  const f = (q: { y: number; z: number }) => v3(x, mirror ? -q.y : q.y, q.z);
+  const { palette: c, opacity } = look;
+  const Li = f(r.lowerInner);
+  const Lo = f(r.lowerOuter);
+  const Ui = f(r.upperInner);
+  const Uo = f(r.upperOuter);
+  return (
+    <group>
+      <Rod a={Li} b={Lo} r={16} color={c.arm} opacity={opacity} />
+      <Rod a={Ui} b={Uo} r={12} color={c.arm} opacity={opacity} />
+      <Rod a={Lo} b={Uo} r={20} color={c.arm} opacity={opacity} />
+      {[Li, Lo, Ui, Uo].map((p, i) => (
+        <Joint key={i} p={p} r={20} color={c.arm} opacity={opacity} />
+      ))}
+    </group>
+  );
+}
+
+/** Lage der Karosserie (Karosserie → Fahrbahn) und Rollzentren im Karosseriesystem. */
+export function carPose(c: Computed) {
+  const wb = c.d.vehicle.wheelbase.value ?? 2725;
+  const axle = c.axle ?? c.stockAxle;
+  const rear = c.rear;
+  const gF = axle ? (axle.left.groundZ + axle.right.groundZ) / 2 : 0;
+  const gR = rear ? (rear.left.groundZ + rear.right.groundZ) / 2 : 0;
+  const roll = axle
+    ? Math.atan2(axle.left.contactPoint.z - axle.right.contactPoint.z, axle.left.contactPoint.y - axle.right.contactPoint.y)
+    : 0;
+  const matrix = bodyToRoad(gF, gR, wb, roll);
+  const rcF = axle?.rollCenter ? v3(0, axle.rollCenter.y, axle.rollCenter.z) : null;
+  const rcRh = rear ? ((rear.left.rollCenterHeight ?? 0) + (rear.right.rollCenterHeight ?? 0)) / 2 : null;
+  const rcR = rear && rcRh !== null ? v3(-wb, 0, gR + rcRh) : null;
+  return { matrix, gF, gR, rcF, rcR, rcRh };
+}
+
+/** Etiketten in Fahrbahnkoordinaten, für die HTML-Ebene über der Szene. */
+export function carLabels(c: Computed): { id: string; pos: THREE.Vector3; text: string }[] {
+  const p = carPose(c);
+  const out: { id: string; pos: THREE.Vector3; text: string }[] = [];
+  if (p.rcF) out.push({ id: "va", pos: p.rcF.clone().applyMatrix4(p.matrix), text: `RZ VA ${fmtMm(c.axle?.rollCenterHeight ?? null, c.kinConfidence, true)}` });
+  if (p.rcR && p.rcRh !== null) out.push({ id: "ha", pos: p.rcR.clone().applyMatrix4(p.matrix), text: `RZ HA ${fmtMm(p.rcRh, c.rearConfidence, true)}` });
+  return out;
+}
+
+export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
+  const d = c.d;
+  const wb = d.vehicle.wheelbase.value ?? 2725;
+  const axle = c.axle ?? c.stockAxle;
+  const rear = c.rear;
+  const refF = d.wheels.current.front;
+  const refR = d.wheels.current.rear;
+
+  const { matrix, rcF, rcR } = useMemo(() => carPose(c), [c]);
+  const halfW = Math.max(d.vehicle.trackFront.value ?? 1480, d.vehicle.trackRear.value ?? 1490) / 2 + VIS.fenderOverTrack;
+  const zcF = refF.staticRadius;
+  const zcR = refR.staticRadius;
+  const archF = d.vehicle.stockHeightFront.value ?? 385;
+  const archR = d.vehicle.stockHeightRear.value ?? 365;
+
+  const body = useMemo(() => {
+    const g = new THREE.ExtrudeGeometry(bodyProfile({ wheelbase: wb, centerZFront: zcF, centerZRear: zcR, archFront: archF, archRear: archR }), {
+      depth: 2 * halfW,
+      bevelEnabled: false,
+    });
+    return g;
+  }, [wb, zcF, zcR, archF, archR, halfW]);
+  const cabin = useMemo(() => new THREE.ExtrudeGeometry(cabinProfile(), { depth: 2 * halfW - 260, bevelEnabled: false }), [halfW]);
+
+  const tf = c.fitFront.wheel.tire;
+  const tr = c.fitRear.wheel.tire;
+  const shiftF = wheelLateralShift(refF.et ?? s.wheels.front.et, s.wheels.front.et, s.wheels.front.spacer);
+  const shiftR = wheelLateralShift(refR.et ?? s.wheels.rear.et, s.wheels.rear.et, s.wheels.rear.spacer);
+  const { palette, opacity } = look;
+
+  const axisPts = rcF && rcR ? [rcF.clone().lerp(rcR, -0.25), rcR.clone().lerp(rcF, -0.25)] : null;
+
+  return (
+    <group matrixAutoUpdate={false} matrix={matrix}>
+      {look.showBody && (
+        <>
+          {/* Extrusion läuft entlang lokal z → um x drehen, damit sie entlang −y läuft */}
+          <mesh geometry={body} rotation={[Math.PI / 2, 0, 0]} position={[0, halfW, 0]} renderOrder={2}>
+            <meshStandardMaterial color={palette.body} transparent opacity={0.16 * opacity} depthWrite={false} side={THREE.DoubleSide} />
+          </mesh>
+          <mesh geometry={cabin} rotation={[Math.PI / 2, 0, 0]} position={[0, halfW - 130, 0]} renderOrder={2}>
+            <meshStandardMaterial color={palette.body} transparent opacity={0.1 * opacity} depthWrite={false} side={THREE.DoubleSide} />
+          </mesh>
+          {[1, -1].flatMap((sd) => [
+            <Line key={`f${sd}`} points={archEdge(0, zcF, archF, sd * halfW)} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
+            <Line key={`r${sd}`} points={archEdge(-wb, zcR, archR, sd * halfW)} color={palette.edge} lineWidth={2.5} transparent opacity={opacity} />,
+          ])}
+        </>
+      )}
+
+      {axle && tf && (
+        <>
+          <FrontCorner s={axle.left} look={look} />
+          <FrontCorner s={axle.right} look={look} />
+          <Wheel
+            center={v3(0, axle.left.wheelCenter.y + shiftF, axle.left.wheelCenter.z)}
+            camberDeg={axle.left.camberBodyDeg}
+            side={1}
+            tire={tf}
+            widthJ={s.wheels.front.widthJ}
+            et={s.wheels.front.et}
+            look={look}
+          />
+          <Wheel
+            center={v3(0, axle.right.wheelCenter.y - shiftF, axle.right.wheelCenter.z)}
+            camberDeg={axle.right.camberBodyDeg}
+            side={-1}
+            tire={tf}
+            widthJ={s.wheels.front.widthJ}
+            et={s.wheels.front.et}
+            look={look}
+          />
+        </>
+      )}
+
+      {rear && tr && (
+        <>
+          <RearCorner r={rear.left} x={-wb} mirror={false} look={look} />
+          <RearCorner r={rear.right} x={-wb} mirror look={look} />
+          <Wheel
+            center={v3(-wb, rear.left.wheelCenter.y + shiftR, rear.left.wheelCenter.z)}
+            camberDeg={rear.left.camberBodyDeg}
+            side={1}
+            tire={tr}
+            widthJ={s.wheels.rear.widthJ}
+            et={s.wheels.rear.et}
+            look={look}
+          />
+          <Wheel
+            center={v3(-wb, -(rear.right.wheelCenter.y + shiftR), rear.right.wheelCenter.z)}
+            camberDeg={rear.right.camberBodyDeg}
+            side={-1}
+            tire={tr}
+            widthJ={s.wheels.rear.widthJ}
+            et={s.wheels.rear.et}
+            look={look}
+          />
+        </>
+      )}
+
+      {/* Rollzentren und Rollachse */}
+      {rcF && <Joint p={rcF} r={34} color={palette.rc} opacity={opacity} />}
+      {rcR && <Joint p={rcR} r={34} color={palette.rc} opacity={opacity} />}
+      {axisPts && <Line points={axisPts} color={palette.rc} lineWidth={3} dashed={opacity < 1} dashSize={80} gapSize={50} transparent opacity={opacity} />}
+    </group>
+  );
+}

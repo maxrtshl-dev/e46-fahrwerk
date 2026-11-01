@@ -68,7 +68,7 @@ export function RearView({ c }: { c: Computed }) {
             </g>
           )}
         </g>
-        <text x={-960} y={-660} className="label small">Hinterachse · Ersatzmodell, Lenkerpunkte angenommen</text>
+        <text x={-960} y={-660} className="label small">Hinterachse · Mehrlenker, vereinfacht auf oberen + unteren Querlenker · Punkte angenommen</text>
       </svg>
     </figure>
   );

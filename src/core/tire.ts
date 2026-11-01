@@ -76,3 +76,11 @@ export function tireShoulders(t: TireSize, r: RimInput, bulgeOverride?: number):
   const bulge = bulgeOverride ?? (t.widthMm - rimWidthMm(r.widthJ)) / 2;
   return { outer: e.outer + bulge, inner: e.inner - bulge };
 }
+
+/**
+ * Seitliche Verschiebung der Felgenmitte gegenüber dem Referenzrad, + = nach außen.
+ * Weniger ET oder Spurplatte schieben das Rad nach außen.
+ */
+export function wheelLateralShift(etRef: number, et: number, spacer: number): number {
+  return etRef - et + spacer;
+}

@@ -22,3 +22,14 @@ describe("Reifen", () => {
     expect(stretch.outer).toBeLessThan(rimEdges({ ...rim, widthJ: 9 }).outer);
   });
 });
+
+import { wheelLateralShift } from "./tire";
+
+describe("Radlage", () => {
+  it("ET und Spurplatte verschieben das Rad", () => {
+    expect(wheelLateralShift(41, 41, 0)).toBe(0);
+    expect(wheelLateralShift(41, 35, 0)).toBe(6);
+    expect(wheelLateralShift(41, 41, 10)).toBe(10);
+    expect(wheelLateralShift(50, 47, 5)).toBe(8);
+  });
+});

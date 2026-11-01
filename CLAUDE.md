@@ -30,7 +30,7 @@ FIN) hier ablegen.
 | M1 Rechenkern (units, data, tire, rideHeight, frontMcPherson, legal) | fertig |
 | M2 2D-Frontansicht VA (SVG, ganze Achse mit Wanken, `frontAxle.ts`, `format.ts`) | fertig, 33 Tests gesamt |
 | M3 Radhaus-Freigang (`fitment.ts`, HA-Band `rearAxle.ts`, Räder je Achse, Messwerte) | fertig, 43 Tests gesamt |
-| M4 3D-Szene | offen |
+| M4 3D-Szene (`src/scene/`, R3F, nachgeladen im Reiter „3D“): Orbit, Front/Heck, Radhaus-Detail, Vergleich mit Preset, Rollachse | fertig, 57 Tests gesamt |
 | M5 HA-Ersatzmodell (`twoLink.ts`), Rollachse (`rollAxis.ts`), Daten-Editor mit Überschreibungen, Checkliste, Export/Import | fertig, 55 Tests gesamt |
 | M6 PWA: Manifest, Icons, Service Worker (offline geprüft), Pages-Workflow | fertig |
 
@@ -82,3 +82,16 @@ FIN) hier ablegen.
 - Eigene Werte: Überschreibungen je JSON-Pfad (`store.overrides`), nur im
   Browser. „Kopieren“ liefert JSON `{pfad: Val}` – das kommt per Chat zu Claude
   und wird mit Quelle in `public/e46_data.json` eingetragen.
+
+## Annahmen M4
+
+- Szene in mm im Fahrzeugsystem (ISO 8855, z oben). Achsen kommen direkt aus
+  dem Rechenkern (Karosseriesystem); `bodyToRoad` legt die Karosserie so, dass
+  die Fahrbahn waagerecht liegt → Tieferlegen, Nicken, Wanken sichtbar.
+- Lenker liegen vereinfacht in der Achsebene (x = 0 bzw. −Radstand).
+- Karosserie nur angedeutet; Maße in `scene/geometry.ts` (`VIS`) sind reine
+  Darstellung. Radlauf = Kreis um die Radmitte in Serienlage, Radius Serienhöhe.
+- Radlage: Referenz-ET aus `wheels.current`, Abweichung und Spurplatte
+  verschieben das Rad (`wheelLateralShift`).
+- Etiketten: eigene HTML-Ebene, per `useFrame` projiziert (drei `<Html>`
+  rendert das erste Etikett unter React 19 leer).

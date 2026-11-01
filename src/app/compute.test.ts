@@ -39,4 +39,12 @@ describe("Gesamtrechnung", () => {
     expect(c.error).not.toBeNull();
     expect(c.axle).toBeNull();
   });
+
+  it("HA je Seite: Wanken nach rechts drückt rechts ein", () => {
+    const c = computeAll(data, { ...K, roll: 2 });
+    expect(c.rear!.right.groundZ).toBeGreaterThan(c.rear!.left.groundZ);
+    expect(c.rear!.right.groundZ).toBeCloseTo(c.rear!.load.groundZ, 6);
+    const n = computeAll(data, K);
+    expect(n.rear!.left.groundZ).toBeCloseTo(n.rear!.right.groundZ, 9);
+  });
 });

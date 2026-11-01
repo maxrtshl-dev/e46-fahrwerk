@@ -167,7 +167,7 @@ export function FrontView({ c, heightFront }: { c: Computed; heightFront: number
           </g>
         )}
 
-        <text x={-960} y={-890} className="label small">Blick von vorn</text>
+        <text x={-960} y={-890} className="label small">Vorderachse · McPherson (Federbein + Querlenker) · Blick von vorn</text>
         <text x={-960} y={60} className="label small">Fzg. rechts</text>
         <text x={960} y={60} className="label small" textAnchor="end">Fzg. links</text>
       </svg>

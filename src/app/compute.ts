@@ -35,6 +35,9 @@ export interface RearComputed {
   stock: TwoLinkResult;
   bandStatic: RearResult;
   bandLoad: RearResult;
+  /** Aktueller Lastfall je Seite (Höhe + Federn + Wanken), Vorzeichen wie VA. */
+  left: TwoLinkResult;
+  right: TwoLinkResult;
 }
 
 export interface Computed {
@@ -176,6 +179,9 @@ export function computeAll(d: E46Data, s: Setup): Computed {
         load: solveRear(g, travelOuter, opts),
         bandStatic: solveRearBand(d, lowR),
         bandLoad: solveRearBand(d, travelOuter),
+        // + Wanken: rechts federt ein (wie VA)
+        left: solveRear(g, wheelTravel({ lowering: lowR, bump: s.bump, rollDeg: s.roll, track: trackRear, outer: false }), opts),
+        right: solveRear(g, wheelTravel({ lowering: lowR, bump: s.bump, rollDeg: s.roll, track: trackRear, outer: true }), opts),
       };
     } catch (e) {
       rearError = msg(e);

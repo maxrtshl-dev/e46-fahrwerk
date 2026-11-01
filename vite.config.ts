@@ -72,5 +72,7 @@ self.addEventListener("fetch", (e) => {
 export default defineConfig({
   base: "./", // relative Pfade: läuft unter /e46-fahrwerk/ auf GitHub Pages und als Artifact
   plugins: [react(), serviceWorker()],
+  // three.js liegt in einem eigenen, nachgeladenen Paket (Reiter „3D“)
+  build: { chunkSizeWarningLimit: 1100 },
   test: { globals: true },
 });
