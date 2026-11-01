@@ -249,13 +249,15 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
       lens: new THREE.MeshStandardMaterial({ color: "#e8f0f6", emissive: "#9fb4c4", emissiveIntensity: 0.25, roughness: 0.1, ...t(0.7) }),
       red: new THREE.MeshStandardMaterial({ color: "#b3121b", emissive: "#5a0508", emissiveIntensity: 0.4, roughness: 0.2, ...t(0.85) }),
       paint: new THREE.MeshStandardMaterial({ color: palette.body, roughness: 0.3, metalness: 0.3, ...t(0.5) }),
+      white: new THREE.MeshStandardMaterial({ color: "#f2f2ee", roughness: 0.5, ...t(0.85) }),
+      smoke: new THREE.MeshStandardMaterial({ color: "#3a3f44", roughness: 0.15, metalness: 0.3, ...t(0.85) }),
     };
     return mats;
   }, [opacity, palette.body, palette.glass]);
   const bodyMat = useMemo(
     () =>
       archCutMaterial({
-        opacity: 0.22 * look.opacity,
+        opacity: 0.3 * look.opacity,
         innerY: halfW * 0.55,
         arches: [
           { x: 0, z: zcF, r: archF },
@@ -286,8 +288,8 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
             <Line
               key={`dl${i}`}
               points={dl.points}
-              color={dl.kind === "chrome" ? "#c9d0d5" : dl.kind === "ring" ? "#ffffff" : palette.edge}
-              lineWidth={dl.kind === "ring" ? 2.2 : dl.kind === "chrome" ? 1.8 : 1}
+              color={dl.kind === "chrome" ? "#c9d0d5" : dl.kind === "ring" ? "#ffffff" : dl.kind === "trim" ? "#15191c" : palette.edge}
+              lineWidth={dl.kind === "ring" ? 2.2 : dl.kind === "chrome" ? 1.8 : dl.kind === "trim" ? 2.4 : 1}
               transparent
               opacity={(dl.kind === "seam" ? 0.6 : 0.95) * opacity}
             />

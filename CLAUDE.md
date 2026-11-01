@@ -98,6 +98,11 @@ FIN) hier ablegen.
   `surfaceX`); `e46Details.ts` projiziert darauf Scheiben (Hofmeister-Knick),
   Fugen, Türgriff, Nieren, Scheinwerfer mit Ringen, Rückleuchten, Diffusor,
   Endrohre und Spiegel. Formen nach Augenmaß, keine Logos.
+- Abgeglichen mit Fotos von Max (2026-11-01, nicht im Repo): Silber, M-Front
+  mit Mitteleinlass und Nebeltaschen, Sicke über Kotflügel/Tür/Seitenwand,
+  dunkler Seitenblinker, Schiebedach, Facelift-Rückleuchten, Spoilerlippe,
+  M-Diffusor, Doppelendrohr links, Tankklappe rechts. **Kennzeichen nie
+  übernehmen** – Schilder bleiben leer.
 - Felge im Stil Styling 68 (`scene/styling68.ts`): 5 Doppelspeichen, gewölbt
   von der Radanlagefläche (ET) bis zum Horn, Lochkreis 5×120. Stilisiert.
 - Radlage: Referenz-ET aus `wheels.current`, Abweichung und Spurplatte

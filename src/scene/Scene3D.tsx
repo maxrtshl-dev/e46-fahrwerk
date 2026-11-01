@@ -76,7 +76,7 @@ function usePalette(): { main: Palette; ghost: Palette; bg: string; grid: string
     const rc = t("--rc", "#d9600f");
     const ghostC = t("--ghost", "#9aa6ae");
     return {
-      main: { body: "#7d93a6", glass: "#1d2a33", tire: "#23282c", rim: "#c9d0d5", arm: accent, spring: rc, rc, edge: ink },
+      main: { body: "#8f979e", glass: "#1d2a33", tire: "#23282c", rim: "#c9d0d5", arm: accent, spring: rc, rc, edge: ink },
       ghost: { body: ghostC, glass: ghostC, tire: ghostC, rim: ghostC, arm: ghostC, spring: ghostC, rc: ghostC, edge: ghostC },
       bg: t("--surface", "#ffffff"),
       grid: t("--line", "#d3dade"),

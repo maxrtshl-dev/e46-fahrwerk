@@ -6,7 +6,7 @@ import * as THREE from "three";
 import { TessellateModifier } from "three/examples/jsm/modifiers/TessellateModifier.js";
 import type { BodyModel } from "./e46Body";
 
-export type DetailKind = "glass" | "black" | "chrome" | "lens" | "red" | "paint";
+export type DetailKind = "glass" | "black" | "chrome" | "lens" | "red" | "paint" | "white" | "smoke";
 
 export interface DetailMesh {
   geometry: THREE.BufferGeometry;
@@ -14,7 +14,7 @@ export interface DetailMesh {
 }
 export interface DetailLine {
   points: THREE.Vector3[];
-  kind: "seam" | "chrome" | "ring";
+  kind: "seam" | "chrome" | "ring" | "trim";
 }
 export interface Details {
   meshes: DetailMesh[];
@@ -65,8 +65,8 @@ export function buildE46Details(m: BodyModel): Details {
   const lines: DetailLine[] = [];
 
   // ---- Seitenansicht (x, z) → y auf der Haut, beide Seiten
-  const side = (poly: P[], kind: DetailKind, lift = LIFT) => {
-    for (const s of [1, -1]) {
+  const side = (poly: P[], kind: DetailKind, lift = LIFT, sides: number[] = [1, -1]) => {
+    for (const s of sides) {
       const g = tessellated(poly.map(([x, z]) => [X(x), Z(z)]));
       const pos = g.getAttribute("position") as THREE.BufferAttribute;
       for (let i = 0; i < pos.count; i++) {
@@ -78,51 +78,41 @@ export function buildE46Details(m: BodyModel): Details {
       meshes.push({ geometry: g, kind });
     }
   };
-  const sideLine = (pts: P[], kind: DetailLine["kind"] = "seam", n = 12) => {
+  const sideLine = (pts: P[], kind: DetailLine["kind"] = "seam", n = 12, sides: number[] = [1, -1]) => {
     const dense = densifyLine(pts, n);
-    for (const s of [1, -1])
+    for (const s of sides)
       lines.push({ kind, points: dense.map(([x, z]) => new THREE.Vector3(X(x), s * (m.sideY(X(x), Z(z)) + LIFT), Z(z))) });
   };
 
-  // Seitenscheibe mit Hofmeister-Knick
-  side(
-    [
-      [-690, 912],
-      [-760, 960],
-      [-1050, 1190],
-      [-1290, 1305],
-      [-1420, 1328],
-      [-1800, 1334],
-      [-2060, 1315],
-      [-2260, 1230],
-      [-2410, 1090],
-      [-2445, 1020],
-      [-2410, 978],
-      [-2330, 960],
-      [-1600, 942],
-      [-700, 916],
-    ],
-    "glass",
-  );
+  // Seitenscheibe mit Hofmeister-Knick, schwarzer Rahmen
+  const dlo: P[] = [
+    [-690, 912],
+    [-760, 960],
+    [-1050, 1190],
+    [-1290, 1305],
+    [-1420, 1328],
+    [-1800, 1334],
+    [-2060, 1315],
+    [-2260, 1230],
+    [-2410, 1090],
+    [-2445, 1020],
+    [-2410, 978],
+    [-2330, 960],
+    [-1600, 942],
+    [-700, 916],
+  ];
+  side(dlo, "glass");
+  sideLine([...dlo, dlo[0]!], "trim", 6);
   // Steg zwischen Tür- und Seitenscheibe
   side(
     [
       [-1950, 945],
-      [-1978, 945],
-      [-2010, 1325],
+      [-1985, 945],
+      [-2017, 1325],
       [-1982, 1328],
     ],
     "black",
     LIFT + 1,
-  );
-  // Fensterrahmen-Zierleiste unten
-  sideLine(
-    [
-      [-700, 914],
-      [-1600, 940],
-      [-2330, 958],
-    ],
-    "chrome",
   );
   // Türfugen
   sideLine([
@@ -136,14 +126,35 @@ export function buildE46Details(m: BodyModel): Details {
     [-1985, 600],
     [-1950, 300],
   ]);
+  // Sicke über Kotflügel, Tür und Seitenwand – an den Radläufen unterbrochen
   sideLine([
-    [-575, 300],
-    [-1950, 300],
+    [600, 575],
+    [300, 568],
+  ]);
+  sideLine([
+    [-300, 570],
+    [-1200, 575],
+    [-2480, 590],
+  ]);
+  sideLine([
+    [-2960, 595],
+    [-3480, 610],
+  ]);
+  // M-Schweller: Oberkante und Kante unten
+  sideLine([
+    [-420, 300],
+    [-2380, 305],
+  ]);
+  sideLine([
+    [-420, 235],
+    [-2380, 240],
   ]);
   // Türgriff
   side(roundRect(-1770, 832, 150, 26, 10), "chrome", LIFT + 2);
-  // Seitenblinker im Kotflügel
-  side(roundRect(150, 690, 60, 22, 10), "lens", LIFT + 1);
+  // Seitenblinker (dunkel) im Kotflügel hinter dem Vorderrad
+  side(roundRect(-460, 600, 75, 24, 11), "smoke", LIFT + 1);
+  // Tankklappe rechts hinten
+  sideLine([...roundRect(-3070, 850, 150, 120, 38), roundRect(-3070, 850, 150, 120, 38)[0]!], "seam", 3, [-1]);
 
   // ---- Oberseite (x, y) → z auf der Haut
   const top = (poly: P[], kind: DetailKind, lift = LIFT) => {
@@ -180,6 +191,15 @@ export function buildE46Details(m: BodyModel): Details {
     ],
     "glass",
   );
+  // Schiebedach
+  const roof: P[] = roundRect(-1690, 0, 600, 740, 60);
+  top(roof, "glass", LIFT + 1);
+  lines.push({ kind: "trim", points: densifyLine([...roof, roof[0]!], 4).map(([x, y]) => new THREE.Vector3(X(x), Y(y), m.topZ(X(x), Y(y)) + LIFT + 2)) });
+  // Scheibenwischer
+  topLine([[-690, -520], [-735, 80]], "trim");
+  topLine([[-690, 60], [-735, 600]], "trim");
+  // Spoilerlippe auf dem Kofferraumdeckel (schwarz)
+  top(roundRect(-3625, 0, 45, 1180, 15), "black", LIFT + 4);
   // Haubenfugen (Haube reicht beim E46 bis zur Kotflügeloberkante)
   for (const s of [1, -1])
     topLine([
@@ -263,21 +283,41 @@ export function buildE46Details(m: BodyModel): Details {
     [520, 50],
   ] as const)
     faceLine(circle(cy, 628, r), "front", "ring");
-  // Lufteinlass, Nebelscheinwerfer, Stoßfängerlinie
-  face(roundRect(0, 355, 760, 95, 35), "black", "front");
-  face(circle(575, 345, 40), "lens", "front");
+  // M-Stoßfänger: Kennzeichenfeld, großer Mitteleinlass mit Gitter, Nebel in Taschen
+  face(roundRect(0, 470, 520, 110, 8), "white", "front", LIFT + 1);
+  const intake: P[] = [
+    [-380, 400],
+    [380, 400],
+    [400, 360],
+    [370, 290],
+    [-370, 290],
+    [-400, 360],
+  ];
+  face(intake, "black", "front");
+  for (let y = 30; y <= 360; y += 55)
+    faceLine(
+      [
+        [y, 300],
+        [y, 392],
+      ],
+      "front",
+      "seam",
+      false,
+    );
+  face(roundRect(570, 345, 210, 125, 45), "black", "front");
+  face(circle(570, 345, 44), "lens", "front", LIFT + 2);
   faceLine(
     [
-      [0, 470],
-      [400, 468],
-      [700, 455],
+      [0, 530],
+      [400, 528],
+      [700, 515],
     ],
     "front",
     "seam",
     false,
   );
 
-  // Rückleuchten (Seitenteil + Deckel), Diffusor
+  // Rückleuchten Facelift: rot mit hellem Innenstreifen, Seitenteil und Deckel
   face(
     [
       [430, 800],
@@ -291,6 +331,17 @@ export function buildE46Details(m: BodyModel): Details {
   );
   face(
     [
+      [450, 812],
+      [640, 808],
+      [640, 836],
+      [450, 840],
+    ],
+    "white",
+    "rear",
+    LIFT + 1,
+  );
+  face(
+    [
       [235, 832],
       [425, 832],
       [425, 900],
@@ -299,6 +350,18 @@ export function buildE46Details(m: BodyModel): Details {
     "red",
     "rear",
   );
+  face(
+    [
+      [300, 838],
+      [420, 838],
+      [420, 860],
+      [300, 860],
+    ],
+    "white",
+    "rear",
+    LIFT + 1,
+  );
+  // Fuge Deckel/Seitenteil, Kennzeichenfeld im Deckel
   faceLine(
     [
       [0, 790],
@@ -308,9 +371,23 @@ export function buildE46Details(m: BodyModel): Details {
     "seam",
     false,
   );
-  face(roundRect(0, 370, 1100, 60, 25), "black", "rear");
+  face(roundRect(0, 705, 520, 112, 8), "white", "rear", LIFT + 1);
+  faceLine(roundRect(0, 705, 600, 150, 25), "rear", "seam");
+  // Stoßfänger: Fuge, Parksensoren, M-Diffusor
+  faceLine(
+    [
+      [0, 615],
+      [600, 610],
+      [770, 595],
+    ],
+    "rear",
+    "seam",
+    false,
+  );
+  for (const y of [190, 480]) face(circle(y, 520, 13, 12), "black", "rear", LIFT + 1);
+  face(roundRect(0, 370, 1150, 95, 30), "black", "rear");
 
-  // ---- Endrohre links (328Ci: Doppelrohr links)
+  // ---- Doppelendrohr links (wie am Foto)
   for (const y of [375, 455]) {
     const yy = Y(y);
     const zz = Z(335);
