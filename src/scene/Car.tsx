@@ -10,7 +10,8 @@ import { MM_PER_INCH, tireRadius, wheelLateralShift, rimWidthMm, type TireSize }
 import { archEdge, between, bodyToRoad, Helix, v3 } from "./geometry";
 import { archCutMaterial, buildE46Body } from "./e46Body";
 import { buildE46Details, type DetailKind } from "./e46Details";
-import { styling68Hub, styling68Star } from "./styling68";
+import { styling68Hub, wheelStar } from "./styling68";
+import type { WheelStyle } from "../core/data";
 
 const DEG = Math.PI / 180;
 
@@ -73,7 +74,9 @@ function Wheel({
   widthJ,
   et,
   look,
+  style,
 }: {
+  style: WheelStyle;
   center: THREE.Vector3;
   camberDeg: number;
   side: 1 | -1; // 1 = links (+y)
@@ -102,7 +105,7 @@ function Wheel({
   const { palette, opacity } = look;
   // links: Sturz negativ → oben nach innen (−y) = positive Drehung um x; rechts gespiegelt
   const rotX = side === 1 ? -camberDeg * DEG : camberDeg * DEG;
-  const star = useMemo(() => styling68Star({ rimR, hubFace: et, lip: b / 2 }), [rimR, et, b]);
+  const star = useMemo(() => wheelStar(style, { rimR, hubFace: et, lip: b / 2 }), [style, rimR, et, b]);
   const hub = useMemo(() => styling68Hub({ rimR, hubFace: et, lip: b / 2 }), [rimR, et, b]);
   return (
     <group position={center} rotation={[rotX, 0, side === 1 ? 0 : Math.PI]}>
@@ -313,6 +316,7 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
             widthJ={s.wheels.front.widthJ}
             et={s.wheels.front.et}
             look={look}
+            style={s.wheelStyle}
           />
           <Wheel
             center={v3(0, axle.right.wheelCenter.y - shiftF, axle.right.wheelCenter.z)}
@@ -322,6 +326,7 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
             widthJ={s.wheels.front.widthJ}
             et={s.wheels.front.et}
             look={look}
+            style={s.wheelStyle}
           />
         </>
       )}
@@ -338,6 +343,7 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
             widthJ={s.wheels.rear.widthJ}
             et={s.wheels.rear.et}
             look={look}
+            style={s.wheelStyle}
           />
           <Wheel
             center={v3(-wb, -(rear.right.wheelCenter.y + shiftR), rear.right.wheelCenter.z)}
@@ -347,6 +353,7 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
             widthJ={s.wheels.rear.widthJ}
             et={s.wheels.rear.et}
             look={look}
+            style={s.wheelStyle}
           />
         </>
       )}

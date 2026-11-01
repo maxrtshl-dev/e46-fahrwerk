@@ -56,7 +56,10 @@ FIN) hier ablegen.
 ## Annahmen M3
 
 - Räder: Styling 68, VA 7,5J ET41 225/45 R17, HA 8,5J ET50 245/40 R17
-  (Angabe Max 2026-11-01). r stat. = r − 13 mm, nicht gemessen.
+  (montiert, Angabe Max 2026-11-01). r stat. = r − 13 mm, nicht gemessen.
+- Zweiter Radsatz in `wheels.sets`: 18" Doppelspeiche (nach Foto vermutlich
+  Styling 193, E90), VA 8J ET34 225/40 R18, HA 8,5J ET37 255/35 R18. In der
+  App per Knopf umschaltbar; `wheels.current` bleibt Referenz für die Radlage.
 - Radlaufkante als Kreis um die Radmitte in Serienlage → Spalt oben = Höhe −
   unbelasteter Reifenradius. Hängt nur an der eingestellten Höhe und der
   Reifengröße, nicht an der geschätzten Serienhöhe.
@@ -103,8 +106,9 @@ FIN) hier ablegen.
   dunkler Seitenblinker, Schiebedach, Facelift-Rückleuchten, Spoilerlippe,
   M-Diffusor, Doppelendrohr links, Tankklappe rechts. **Kennzeichen nie
   übernehmen** – Schilder bleiben leer.
-- Felge im Stil Styling 68 (`scene/styling68.ts`): 5 Doppelspeichen, gewölbt
-  von der Radanlagefläche (ET) bis zum Horn, Lochkreis 5×120. Stilisiert.
+- Felgen (`scene/styling68.ts`, `wheelStar`): Styling 68 mit 5, Styling 193 mit
+  7 Doppelspeichen, gewölbt von der Radanlagefläche (ET) bis zum Horn,
+  Lochkreis 5×120. Stilisiert.
 - Radlage: Referenz-ET aus `wheels.current`, Abweichung und Spurplatte
   verschieben das Rad (`wheelLateralShift`).
 - Etiketten: eigene HTML-Ebene, per `useFrame` projiziert (drei `<Html>`

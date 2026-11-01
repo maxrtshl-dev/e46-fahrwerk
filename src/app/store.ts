@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 import raw from "../../public/e46_data.json";
-import type { E46Data, Overrides, Preset, Val } from "../core/data";
+import type { E46Data, Overrides, Preset, Val, WheelSet, WheelStyle } from "../core/data";
 import { applyOverrides, req } from "../core/data";
 
 /** Daten aus dem Repo, unverändert. */
@@ -27,6 +27,10 @@ export interface Setup {
   camberCorrDeg: number; // Domversatz VA als Sturzkorrektur, Grad (≥ 0)
   camberOffsetRearDeg: number; // Exzenter HA, Grad (− = negativer)
   wheels: { front: WheelSetup; rear: WheelSetup };
+  /** Felgendesign für die 3D-Ansicht. */
+  wheelStyle: WheelStyle;
+  /** Gewählter Radsatz aus data.wheels.sets; null = von Hand geändert. */
+  wheelSet: string | null;
   /** Eigene Werte je Pfad in e46_data.json – Messungen haben Vorrang. */
   overrides: Overrides;
   /** Checkliste Messungen: Index in measurementsTodo → erledigt. */
@@ -38,6 +42,7 @@ export type MeasureKey = Exclude<keyof E46Data["fitment"], "note">;
 interface Store extends Setup {
   set: (p: Partial<Setup>) => void;
   setWheel: (axle: "front" | "rear", p: Partial<WheelSetup>) => void;
+  applyWheelSet: (w: WheelSet) => void;
   setOverride: (path: string, v: Val | null) => void;
   replaceOverrides: (o: Overrides) => void;
   toggleTodo: (i: number) => void;
@@ -63,6 +68,8 @@ export const initialSetup: Setup = {
   camberCorrDeg: 0,
   camberOffsetRearDeg: 0,
   wheels: { front: toSetup(baseData.wheels.current.front), rear: toSetup(baseData.wheels.current.rear) },
+  wheelStyle: baseData.wheels.current.style ?? "styling68",
+  wheelSet: baseData.wheels.sets?.[0]?.id ?? null,
   overrides: {},
   todoDone: {},
 };
@@ -94,7 +101,8 @@ export const useSetup = create<Store>()(
     (set) => ({
       ...initialSetup,
       set: (p) => set({ ...p, preset: "preset" in p ? (p.preset ?? null) : null }),
-      setWheel: (axle, p) => set((st) => ({ wheels: { ...st.wheels, [axle]: { ...st.wheels[axle], ...p } } })),
+      setWheel: (axle, p) => set((st) => ({ wheels: { ...st.wheels, [axle]: { ...st.wheels[axle], ...p } }, wheelSet: null })),
+      applyWheelSet: (w) => set({ wheels: { front: toSetup(w.front), rear: toSetup(w.rear) }, wheelStyle: w.style, wheelSet: w.id }),
       setOverride: (path, v) =>
         set((st) => {
           const next = { ...st.overrides };
@@ -116,7 +124,7 @@ export const useSetup = create<Store>()(
     {
       name: "e46-fahrwerk-setup",
       storage: safeStorage,
-      version: 3,
+      version: 4,
       migrate: (old, version) => {
         const o = (old ?? {}) as Partial<Setup> & { measured?: Record<string, number | null> };
         const overrides: Overrides = {};
@@ -131,6 +139,8 @@ export const useSetup = create<Store>()(
           wheels: version < 2 ? initialSetup.wheels : (o.wheels ?? initialSetup.wheels),
           overrides: { ...overrides, ...(o.overrides ?? {}) },
           todoDone: o.todoDone ?? {},
+          wheelStyle: o.wheelStyle ?? initialSetup.wheelStyle,
+          wheelSet: o.wheelSet === undefined ? initialSetup.wheelSet : o.wheelSet,
         } as Store;
       },
     },

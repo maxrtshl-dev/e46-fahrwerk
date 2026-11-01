@@ -47,4 +47,14 @@ describe("Gesamtrechnung", () => {
     const n = computeAll(data, K);
     expect(n.rear!.left.groundZ).toBeCloseTo(n.rear!.right.groundZ, 9);
   });
+
+  it("Radsatz 18 Zoll: Rad steht außen weiter raus, Spalt oben kleiner", () => {
+    const set = data.wheels.sets!.find((w) => w.id === "styling193")!;
+    const toSetup = (w: typeof set.front) => ({ widthJ: w.widthJ!, et: w.et!, spacer: w.spacer, tire: w.tire, staticRadius: w.staticRadius });
+    const a = computeAll(data, K);
+    const b = computeAll(data, { ...K, wheels: { front: toSetup(set.front), rear: toSetup(set.rear) }, wheelStyle: "styling193" });
+    expect(b.fitRear.wheel.geo!.shoulder.outer).toBeGreaterThan(a.fitRear.wheel.geo!.shoulder.outer + 15);
+    const top = (c: typeof a, axle: "fitFront" | "fitRear") => c[axle].cases[0]!.checks.find((x) => x.id === "oben")!.value!;
+    expect(top(b, "fitRear")).toBeLessThan(top(a, "fitRear"));
+  });
 });

@@ -60,10 +60,23 @@ function WheelFields({ axle, label }: { axle: "front" | "rear"; label: string })
 }
 
 export function WheelsPanel() {
+  const wheelSet = useSetup((s) => s.wheelSet);
+  const applyWheelSet = useSetup((s) => s.applyWheelSet);
+  const sets = data.wheels.sets ?? [];
+  const active = sets.find((w) => w.id === wheelSet);
   return (
     <section className="panel" aria-label="Räder">
       <h2>Räder</h2>
-      <p className="hint">{data.wheels.current.name ?? "aktuelle Räder"} · ET und Spurplatte in mm, Spurplatte je Seite</p>
+      {sets.length > 0 && (
+        <div className="presets" role="group" aria-label="Radsätze">
+          {sets.map((w) => (
+            <button key={w.id} type="button" className={wheelSet === w.id ? "chip active" : "chip"} onClick={() => applyWheelSet(w)}>
+              <span>{w.name}</span>
+            </button>
+          ))}
+        </div>
+      )}
+      <p className="hint">{active?.note ?? "eigene Werte"} · ET und Spurplatte in mm, Spurplatte je Seite</p>
       <WheelFields axle="front" label="Vorderachse" />
       <WheelFields axle="rear" label="Hinterachse" />
     </section>

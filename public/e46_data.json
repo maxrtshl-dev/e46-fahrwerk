@@ -4,7 +4,7 @@
     "type": "346C",
     "engine": "M52TU B28",
     "coilover": "DTSline (Teilegutachten 14-TAAS-0183/1K)",
-    "version": "2026-11-01d",
+    "version": "2026-11-01e",
     "conventions": "ISO 8855 (x vorn, y links, z oben), mm, Grad dezimal; Sturz negativ = oben innen; Spur positiv = Vorspur; Höhe = Radmitte bis Radlaufkante"
   },
   "limits": {
@@ -316,8 +316,55 @@
         "tire": "245/40 R17",
         "staticRadius": 301
       },
-      "note": "Angabe Max 2026-11-01. staticRadius ≈ r − 13 mm (SPEC 7.1), nicht gemessen"
-    }
+      "note": "Angabe Max 2026-11-01. staticRadius ≈ r − 13 mm (SPEC 7.1), nicht gemessen",
+      "style": "styling68"
+    },
+    "sets": [
+      {
+        "id": "styling68",
+        "name": "Styling 68 · 17\" (montiert)",
+        "style": "styling68",
+        "front": {
+          "diameterInch": 17,
+          "widthJ": 7.5,
+          "et": 41,
+          "spacer": 0,
+          "tire": "225/45 R17",
+          "staticRadius": 304
+        },
+        "rear": {
+          "diameterInch": 17,
+          "widthJ": 8.5,
+          "et": 50,
+          "spacer": 0,
+          "tire": "245/40 R17",
+          "staticRadius": 301
+        },
+        "note": "Angabe Max 2026-11-01"
+      },
+      {
+        "id": "styling193",
+        "name": "Doppelspeiche · 18\" (Styling 193, nach Foto vermutet)",
+        "style": "styling193",
+        "front": {
+          "diameterInch": 18,
+          "widthJ": 8,
+          "et": 34,
+          "spacer": 0,
+          "tire": "225/40 R18",
+          "staticRadius": 306
+        },
+        "rear": {
+          "diameterInch": 18,
+          "widthJ": 8.5,
+          "et": 37,
+          "spacer": 0,
+          "tire": "255/35 R18",
+          "staticRadius": 305
+        },
+        "note": "Angabe Max 2026-11-01. staticRadius ≈ r − 13 mm, nicht gemessen. Felge vom E90 – Kombination muss für Typ 346C begutachtet/eingetragen sein"
+      }
+    ]
   },
   "measurementsTodo": [
     "Ist-Höhe alle 4 Räder",

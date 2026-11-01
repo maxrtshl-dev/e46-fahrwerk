@@ -1,8 +1,10 @@
-// Felgenstern im Stil BMW Styling 68 (M-Doppelspeiche): fünf Speichenpaare, die an der
-// Nabe zusammenlaufen und zum Felgenhorn auseinandergehen, nach außen gewölbt.
-// Nur Darstellung. Lokales System: Felgenachse = +Y (nach außen), Fläche in X/Z.
+// Felgensterne (Doppelspeiche): Speichenpaare, die an der Nabe zusammenlaufen und zum
+// Felgenhorn auseinandergehen, nach außen gewölbt. Styling 68 (17", 5 Paare) und
+// Styling 193 (18", 7 schlanke Paare, nach Foto). Nur Darstellung.
+// Lokales System: Felgenachse = +Y (nach außen), Fläche in X/Z.
 
 import * as THREE from "three";
+import type { WheelStyle } from "../core/data";
 
 export interface StarParams {
   rimR: number; // Radius Felgenhorn innen (Sitz), mm
@@ -10,15 +12,26 @@ export interface StarParams {
   lip: number; // axiale Lage des äußeren Felgenhorns (= Maulweite/2), mm
 }
 
-const PAIRS = 5;
 const DEPTH = 18; // Speichenstärke
 
+interface Design {
+  pairs: number;
+  spread: number; // halber Winkel zwischen den beiden Speichen am Horn
+  wOuter: number; // halbe Speichenbreite am Horn (Winkel)
+  wHub: number; // halbe Breite des Paars an der Nabe (Winkel)
+  split: number; // Gabelung als Anteil des Wegs Nabe → Horn
+  dish: number; // Exponent der Wölbung (größer = tiefer)
+}
+
+const DESIGNS: Record<WheelStyle, Design> = {
+  styling68: { pairs: 5, spread: 0.17, wOuter: 0.055, wHub: 0.2, split: 0.42, dish: 1.35 },
+  styling193: { pairs: 7, spread: 0.095, wOuter: 0.033, wHub: 0.125, split: 0.28, dish: 1.6 },
+};
+
 /** Umriss eines Speichenpaars in Polarkoordinaten, Mitte bei Winkel 0. */
-function pairShape(rHub: number, rSplit: number, rOuter: number): THREE.Shape {
+function pairShape(rHub: number, rSplit: number, rOuter: number, d: Design): THREE.Shape {
   const pt = (r: number, a: number) => new THREE.Vector2(r * Math.cos(a), r * Math.sin(a));
-  const spread = 0.17; // halber Winkel zwischen den beiden Speichen am Horn
-  const wOuter = 0.055; // halbe Speichenbreite am Horn (Winkel)
-  const wHub = 0.2; // halbe Breite des Paars an der Nabe
+  const { spread, wOuter, wHub } = d;
   const s = new THREE.Shape();
   const a = pt(rHub, -wHub);
   s.moveTo(a.x, a.y);
@@ -40,13 +53,14 @@ function pairShape(rHub: number, rSplit: number, rOuter: number): THREE.Shape {
 }
 
 /** Speichenstern als eine Geometrie, gewölbt: innen auf der Radanlagefläche, außen am Horn. */
-export function styling68Star(p: StarParams): THREE.BufferGeometry {
+export function wheelStar(style: WheelStyle, p: StarParams): THREE.BufferGeometry {
+  const d = DESIGNS[style];
   const rHub = 78;
   const rOuter = p.rimR - 6;
-  const rSplit = rHub + 0.42 * (rOuter - rHub);
+  const rSplit = rHub + d.split * (rOuter - rHub);
   const parts: THREE.BufferGeometry[] = [];
-  for (let i = 0; i < PAIRS; i++) {
-    const g = new THREE.ExtrudeGeometry(pairShape(rHub, rSplit, rOuter), {
+  for (let i = 0; i < d.pairs; i++) {
+    const g = new THREE.ExtrudeGeometry(pairShape(rHub, rSplit, rOuter, d), {
       depth: DEPTH,
       bevelEnabled: true,
       bevelThickness: 3,
@@ -54,7 +68,7 @@ export function styling68Star(p: StarParams): THREE.BufferGeometry {
       bevelSegments: 2,
       curveSegments: 10,
     });
-    g.rotateZ((i / PAIRS) * Math.PI * 2);
+    g.rotateZ((i / d.pairs) * Math.PI * 2);
     parts.push(g);
   }
   const merged = mergeGeometries(parts);
@@ -67,13 +81,16 @@ export function styling68Star(p: StarParams): THREE.BufferGeometry {
     const z = pos.getZ(i);
     const r = Math.hypot(x, y);
     const t = Math.min(1, Math.max(0, (r - rHub) / (rOuter - rHub)));
-    const face = p.hubFace + 14 + (front - p.hubFace - 14) * Math.pow(t, 1.35);
+    const face = p.hubFace + 14 + (front - p.hubFace - 14) * Math.pow(t, d.dish);
     pos.setZ(i, face - DEPTH + z);
   }
   merged.computeVertexNormals();
   merged.rotateX(-Math.PI / 2); // Z → Y (Felgenachse)
   return merged;
 }
+
+/** Rückwärtskompatibel: Stern Styling 68. */
+export const styling68Star = (p: StarParams) => wheelStar("styling68", p);
 
 /** Nabe mit fünf Radschrauben auf Lochkreis 120 mm und Nabendeckel. */
 export function styling68Hub(p: StarParams): THREE.BufferGeometry {

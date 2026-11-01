@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { buildE46Body } from "./e46Body";
-import { styling68Star } from "./styling68";
+import { styling68Star, wheelStar } from "./styling68";
 
 const dims = { length: 4488, width: 1757, height: 1369, wheelbase: 2725, overhangFront: 790 };
 
@@ -58,3 +58,14 @@ describe("Felge Styling 68 (Darstellung)", () => {
     void bb;
   });
 });
+
+describe("Felge Styling 193 (Darstellung)", () => {
+  it("18 Zoll, 8J ET34: Stern zwischen Anlagefläche und Horn", () => {
+    const g = wheelStar("styling193", { rimR: 228.6, hubFace: 34, lip: 101.6 });
+    g.computeBoundingBox();
+    expect(g.boundingBox!.min.y).toBeGreaterThan(34 - 25);
+    expect(g.boundingBox!.max.y).toBeLessThan(101.6 + 5);
+    expect(g.boundingBox!.max.x).toBeLessThan(228.6);
+  });
+});
+

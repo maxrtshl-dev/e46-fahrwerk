@@ -25,6 +25,17 @@ export interface WheelSpec {
   staticRadius: number;
 }
 
+export type WheelStyle = "styling68" | "styling193";
+
+export interface WheelSet {
+  id: string;
+  name: string;
+  style: WheelStyle;
+  front: WheelSpec;
+  rear: WheelSpec;
+  note?: string;
+}
+
 export interface Preset {
   name: string;
   front: number | null;
@@ -95,7 +106,8 @@ export interface E46Data {
   };
   presets: Preset[];
   wheels: {
-    current: { name?: string; front: WheelSpec; rear: WheelSpec; note?: string };
+    current: { name?: string; style?: WheelStyle; front: WheelSpec; rear: WheelSpec; note?: string };
+    sets?: WheelSet[];
   };
   fitment: {
     note: string;
