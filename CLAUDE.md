@@ -131,3 +131,19 @@ FIN) hier ablegen.
 - Absolute Maße nur mit Referenz (`coilover.refPerch*`, `refHeight*`, gemessen).
   Das ungünstigste Bandende geht in `checkLegal` (Federteller-Verstellbereich).
 - Setzen HA (`springSettleRear`) nur als Hinweis: nach 100–200 km neu messen.
+
+## Eigener Scan (2026-11-02)
+
+- Ziel: das echte Auto statt Nachbau. Max scannt mit iPhone 14 Pro (LiDAR,
+  Scaniverse/Polycam → GLB). **Scan bleibt privat**: nur IndexedDB im Browser
+  (`scene/scanStore.ts`), nie ins Repo – enthält das Kennzeichen.
+- Laden/Ausrichten: `scene/scanAlign.ts` (Y-oben → Z-oben, m → mm, Längsachse per
+  Hauptachsenanalyse, Front auf Überhang vorn, Boden auf Fahrbahn), Feinwerte und
+  Ausrichtung im Store (`scanAlign`). Bedienung `scene/ScanPanel.tsx`.
+- Scan hängt im Karosseriesystem → bewegt sich mit Höhe/Nicken/Wanken. Zum
+  Ausrichten die App auf die Höhe beim Scannen stellen.
+- Gescannte Räder per Shader ausgeschnitten (`scene/scanMaterial.ts`, Stadion um
+  die Radmitte über ±160 mm Hub, nur außen), berechnete Räder sichtbar.
+- Felge Styling 68 exakt: braucht Fotos (frontal, seitlich) und Maße (Tiefe,
+  Speichenbreiten, Nabendeckel) von Max – Bilder aus dem Netz sind hier nicht
+  abrufbar.

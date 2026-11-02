@@ -258,3 +258,14 @@ textarea { width: 100%; font: 13px var(--font-mono); color: var(--ink); backgrou
 .co-refs { display: flex; gap: 12px; flex-wrap: wrap; }
 .co-ref { display: inline-flex; gap: 6px; align-items: center; font-size: 0.85rem; color: var(--muted); }
 .co-ref input.short { width: 72px; }
+
+/* Eigener Scan */
+details.scan { border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px; display: grid; gap: 8px; }
+details.scan summary { font-weight: 600; cursor: pointer; }
+details.scan[open] { gap: 10px; }
+.scan-steps { margin: 0; padding-left: 20px; font-size: 0.85rem; display: grid; gap: 3px; }
+.scan-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 14px; }
+.scan-num { display: grid; gap: 3px; font-size: 0.85rem; }
+.scan-num .chip { padding: 4px 10px; }
+.scan-num input.short { width: 76px; }
+.scan-opts { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.88rem; }

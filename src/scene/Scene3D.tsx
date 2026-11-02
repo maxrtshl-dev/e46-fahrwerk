@@ -4,7 +4,10 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Grid, OrbitControls } from "@react-three/drei";
 import { computeAll, type Computed } from "../app/compute";
 import { data, useData, useSetup, type Setup } from "../app/store";
-import { bodyDims, Car, carLabels, type Palette } from "./Car";
+import { bodyDims, Car, carLabels, carPose, type Palette } from "./Car";
+import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
+import { clearScan, loadScan, saveScan } from "./scanStore";
+import { ScanPanel, samplePoints, type LoadedScan } from "./ScanPanel";
 import { BodyModel } from "./e46Body";
 
 // Szene in mm, Fahrzeugsystem ISO 8855 (x vorn, y links, z oben); Fahrbahn z = 0.
@@ -121,6 +124,47 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
   }, [c, s, model, showDims, view]);
   const labelRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  // ---- eigener Scan (nur auf diesem Gerät)
+  const scanAlign = useSetup((st) => st.scanAlign);
+  const [scan, setScan] = useState<LoadedScan | null>(null);
+  const [scanStatus, setScanStatus] = useState<string | null>(null);
+  const parse = (name: string, buf: ArrayBuffer) =>
+    new Promise<LoadedScan>((resolve, reject) =>
+      new GLTFLoader().parse(buf, "", (g) => resolve({ name, object: g.scene, points: samplePoints(g.scene) }), reject),
+    );
+  useEffect(() => {
+    let alive = true;
+    loadScan().then(async (st) => {
+      if (!st || !alive) return;
+      try {
+        const sc = await parse(st.name, st.data);
+        if (alive) setScan(sc);
+      } catch {
+        setScanStatus("Gespeicherter Scan ließ sich nicht öffnen.");
+      }
+    });
+    return () => {
+      alive = false;
+    };
+  }, []);
+  const onScanFile = async (f: File) => {
+    setScanStatus(`Lade ${f.name} …`);
+    try {
+      const buf = await f.arrayBuffer();
+      const sc = await parse(f.name, buf);
+      setScan(sc);
+      await saveScan({ name: f.name, data: buf });
+      setScanStatus(`${f.name} geladen (${(buf.byteLength / 1e6).toFixed(1).replace(".", ",")} MB). Jetzt ausrichten.`);
+    } catch (e) {
+      setScanStatus(`Konnte ${f.name} nicht laden: ${e instanceof Error ? e.message : String(e)}. Erwartet wird eine .glb-Datei.`);
+    }
+  };
+  const onScanClear = async () => {
+    await clearScan();
+    setScan(null);
+    setScanStatus("Scan von diesem Gerät entfernt.");
+  };
+
   const ghost = useMemo(() => {
     const p = data.presets.find((x) => x.name === compare);
     if (!p) return null;
@@ -181,7 +225,7 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
             infiniteGrid={false}
           />
           {ghost && <Car c={ghost} s={s} look={{ palette: pal.ghost, opacity: 0.35, showBody, labels: false }} />}
-          <Car c={c} s={s} look={{ palette: pal.main, opacity: 1, showBody, labels: true, dims: showDims }} />
+          <Car c={c} s={s} look={{ palette: pal.main, opacity: 1, showBody, labels: true, dims: showDims }} scan={scan ? { object: scan.object, align: scanAlign } : null} />
           <LabelProjector labels={labels} refs={labelRefs} />
         </Canvas>
         {labels.map((l) => (
@@ -196,6 +240,16 @@ export default function Scene3D({ c, s }: { c: Computed; s: Setup }) {
           </div>
         ))}
       </div>
+      <ScanPanel
+        scan={scan}
+        onFile={onScanFile}
+        onClear={onScanClear}
+        status={scanStatus}
+        groundZ={carPose(c).gF}
+        wheelbase={wb}
+        overhangFront={d.vehicle.overhangFront.value ?? 790}
+        bodyLength={d.vehicle.bodyLength.value ?? 4488}
+      />
       <p className="hint">
         Ziehen = drehen, zwei Finger = zoomen/verschieben. Maße an den linken Rädern aus derselben Rechnung wie die Radhaus-Ampel. Radlauf = Kreis um die
         Radmitte in Serienlage; die Kante sitzt seitlich auf der geschätzten Karosseriebreite, bis „Radlaufkante seitlich“ gemessen ist – dann an der

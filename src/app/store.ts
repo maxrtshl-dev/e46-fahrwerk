@@ -4,6 +4,7 @@ import { createJSONStorage, persist } from "zustand/middleware";
 import raw from "../../public/e46_data.json";
 import type { E46Data, Overrides, Preset, Val, WheelSet, WheelStyle } from "../core/data";
 import { applyOverrides, req } from "../core/data";
+import { defaultAlign, type ScanAlign } from "../scene/scanAlign";
 
 /** Daten aus dem Repo, unverändert. */
 export const baseData = raw as unknown as E46Data;
@@ -35,6 +36,8 @@ export interface Setup {
   overrides: Overrides;
   /** Checkliste Messungen: Index in measurementsTodo → erledigt. */
   todoDone: Record<number, boolean>;
+  /** Ausrichtung des eigenen Scans (der Scan selbst liegt nur in IndexedDB). */
+  scanAlign: ScanAlign;
 }
 
 export type MeasureKey = Exclude<keyof E46Data["fitment"], "note">;
@@ -46,6 +49,7 @@ interface Store extends Setup {
   setOverride: (path: string, v: Val | null) => void;
   replaceOverrides: (o: Overrides) => void;
   toggleTodo: (i: number) => void;
+  setScanAlign: (p: Partial<ScanAlign>) => void;
   applyPreset: (p: Preset) => void;
 }
 
@@ -72,6 +76,7 @@ export const initialSetup: Setup = {
   wheelSet: baseData.wheels.sets?.[0]?.id ?? null,
   overrides: {},
   todoDone: {},
+  scanAlign: defaultAlign,
 };
 
 /** Neue eigene Messung für einen Pfad. */
@@ -112,6 +117,7 @@ export const useSetup = create<Store>()(
         }),
       replaceOverrides: (o) => set({ overrides: o }),
       toggleTodo: (i) => set((st) => ({ todoDone: { ...st.todoDone, [i]: !st.todoDone[i] } })),
+      setScanAlign: (p) => set((st) => ({ scanAlign: { ...st.scanAlign, ...p } })),
       applyPreset: (p) =>
         set({
           preset: p.name,
@@ -124,7 +130,7 @@ export const useSetup = create<Store>()(
     {
       name: "e46-fahrwerk-setup",
       storage: safeStorage,
-      version: 4,
+      version: 5,
       migrate: (old, version) => {
         const o = (old ?? {}) as Partial<Setup> & { measured?: Record<string, number | null> };
         const overrides: Overrides = {};
@@ -141,6 +147,7 @@ export const useSetup = create<Store>()(
           todoDone: o.todoDone ?? {},
           wheelStyle: o.wheelStyle ?? initialSetup.wheelStyle,
           wheelSet: o.wheelSet === undefined ? initialSetup.wheelSet : o.wheelSet,
+          scanAlign: { ...defaultAlign, ...(o.scanAlign ?? {}) },
         } as Store;
       },
     },

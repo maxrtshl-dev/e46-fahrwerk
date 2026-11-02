@@ -9,6 +9,8 @@ import type { TwoLinkResult } from "../core/twoLink";
 import { MM_PER_INCH, tireRadius, wheelLateralShift, rimWidthMm, type TireSize } from "../core/tire";
 import { archEdge, archLiner, between, bodyToRoad, Helix, v3, VIS } from "./geometry";
 import { fitmentMarks, type WheelMark } from "./fitmentMarks";
+import { alignMatrix, type ScanAlign } from "./scanAlign";
+import { applyScanMaterials } from "./scanMaterial";
 import type { E46Data } from "../core/data";
 import { archCutMaterial, buildE46Body, BodyModel, type BodyDims } from "./e46Body";
 import { buildE46Details, type DetailKind } from "./e46Details";
@@ -277,7 +279,44 @@ export function carLabels(c: Computed, s?: Setup, model?: BodyModel, withDims = 
   return out;
 }
 
-export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
+/** Eigener Scan im Karosseriesystem; bewegt sich mit Höhe, Nicken und Wanken mit. */
+function ScanModel({
+  object,
+  align,
+  bodyMatrix,
+  cuts,
+}: {
+  object: THREE.Object3D;
+  align: ScanAlign;
+  bodyMatrix: THREE.Matrix4;
+  cuts: { x: number; z: number; r: number; innerY: number }[];
+}) {
+  const bodyInverse = useMemo(() => ({ value: new THREE.Matrix4() }), []);
+  bodyInverse.value.copy(bodyMatrix).invert();
+  useMemo(
+    () => applyScanMaterials(object, { opacity: align.opacity, cuts: align.hideWheels ? cuts : null, bodyInverse }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [object, align.opacity, align.hideWheels, JSON.stringify(cuts)],
+  );
+  const m = useMemo(() => alignMatrix(align), [align]);
+  return (
+    <group matrixAutoUpdate={false} matrix={m}>
+      <primitive object={object} />
+    </group>
+  );
+}
+
+export function Car({
+  c,
+  s,
+  look,
+  scan,
+}: {
+  c: Computed;
+  s: Setup;
+  look: Look;
+  scan?: { object: THREE.Object3D; align: ScanAlign } | null;
+}) {
   const d = c.d;
   const wb = d.vehicle.wheelbase.value ?? 2725;
   const axle = c.axle ?? c.stockAxle;
@@ -332,11 +371,20 @@ export function Car({ c, s, look }: { c: Computed; s: Setup; look: Look }) {
   const tr = c.fitRear.wheel.tire;
   const shiftF = wheelLateralShift(refF.et ?? s.wheels.front.et, s.wheels.front.et, s.wheels.front.spacer);
   const shiftR = wheelLateralShift(refR.et ?? s.wheels.rear.et, s.wheels.rear.et, s.wheels.rear.spacer);
+  const showScan = !!scan && scan.align.visible;
+  const showBody = look.showBody && !(showScan && scan!.align.hideBody);
+  const cutR = Math.max(tf ? tireRadius(tf) : 320, tr ? tireRadius(tr) : 320) + 25;
+  const cuts = [
+    { x: 0, z: zcF, r: cutR, innerY: (axle?.left.wheelCenter.y ?? 740) - 190 },
+    { x: -wb, z: zcR, r: cutR, innerY: (rear?.left.wheelCenter.y ?? 740) - 190 },
+  ];
+
   const axisPts = rcF && rcR ? [rcF.clone().lerp(rcR, -0.25), rcR.clone().lerp(rcF, -0.25)] : null;
 
   return (
     <group matrixAutoUpdate={false} matrix={matrix}>
-      {look.showBody && (
+      {showScan && <ScanModel object={scan!.object} align={scan!.align} bodyMatrix={matrix} cuts={cuts} />}
+      {showBody && (
         <>
           <mesh geometry={body.geometry} material={bodyMat} renderOrder={2} />
           {body.lines.map((pts, i) => (
