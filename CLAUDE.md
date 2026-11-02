@@ -109,9 +109,11 @@ FIN) hier ablegen.
   dunkler Seitenblinker, Schiebedach, Facelift-Rückleuchten, Spoilerlippe,
   M-Diffusor, Doppelendrohr links, Tankklappe rechts. **Kennzeichen nie
   übernehmen** – Schilder bleiben leer.
-- Felgen (`scene/styling68.ts`, `wheelStar`): Styling 68 mit 5, Styling 193 mit
-  7 Doppelspeichen, gewölbt von der Radanlagefläche (ET) bis zum Horn,
-  Lochkreis 5×120. Stilisiert.
+- Felgen (`scene/styling68.ts`, `wheelStar`): Styling 68 nach Fotos von Max
+  (2026-11-02): 5 Doppelspeichen aus je zwei parallelen Armen mit Rille,
+  sichelförmig geschwungen, am Horn verbreitert; Proportionen über 17" und
+  Lochkreis 120 abgenommen, Tiefe der Wölbung geschätzt. Styling 193: 7 schlanke
+  Paare (vermutet). Gewölbt von der Radanlagefläche (ET) bis zum Horn.
 - Fitment in 3D (`scene/fitmentMarks.ts`): Bördelkante (Rohr) und Radhausschale
   je Rad, Maße Spalt oben und Schulter ↔ Kante an den linken Rädern – dieselben
   Werte wie `fitment.ts` (Test). Kante seitlich: `fitment.fenderLateral*` +
@@ -144,6 +146,5 @@ FIN) hier ablegen.
   Ausrichten die App auf die Höhe beim Scannen stellen.
 - Gescannte Räder per Shader ausgeschnitten (`scene/scanMaterial.ts`, Stadion um
   die Radmitte über ±160 mm Hub, nur außen), berechnete Räder sichtbar.
-- Felge Styling 68 exakt: braucht Fotos (frontal, seitlich) und Maße (Tiefe,
-  Speichenbreiten, Nabendeckel) von Max – Bilder aus dem Netz sind hier nicht
-  abrufbar.
+- Felge Styling 68: Form aus vorhandenen Fotos; für Maßgenauigkeit fehlen noch
+  Tiefe der Wölbung, Speichenbreiten und Nabendeckel (Messung Max).
